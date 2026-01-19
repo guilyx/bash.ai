@@ -45,6 +45,11 @@ class Settings:
         # Model configuration - supports any LiteLLM provider
         self.model: str = os.getenv("MODEL", "gpt-4o-mini")
         self.api_key: str | None = os.getenv("API_KEY")
+        if not self.api_key:
+            raise ValueError(
+                "API_KEY environment variable is required. "
+                "Please set it in your .env file or export it."
+            )
         self.api_base: str | None = os.getenv("API_BASE")
 
         # Load commands from JSON config
