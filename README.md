@@ -1,8 +1,8 @@
 # bash.ai
 
-> AI-powered bash environment enhancement tool using Google ADK
+> AI-powered bash environment enhancement tool using LiteLLM
 
-`bash.ai` is an open-source tool that enhances your bash environment with agentic AI capabilities. It allows you to interact with LLMs directly from your terminal and execute complex workflows through AI orchestration.
+`bash.ai` is an open-source tool that enhances your bash environment with agentic AI capabilities. It allows you to interact with various LLMs directly from your terminal and execute complex workflows through AI orchestration.
 
 ## Features
 
@@ -25,7 +25,7 @@
 ## Prerequisites
 
 - Python 3.12 or later
-- Google ADK API key ([Get one here](https://aistudio.google.com/apikey))
+- An API key for your chosen LLM provider (e.g., OpenAI, Anthropic, Google)
 
 ### Upgrading Python
 
@@ -49,41 +49,28 @@ pyenv global 3.12.0
    cd bash.ai
    ```
 
-2. Install [uv](https://github.com/astral-sh/uv) (if not already installed):
+2. Create and activate a virtual environment:
    ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
+   python3.12 -m venv .venv
+   source .venv/bin/activate
    ```
 
 3. Install dependencies:
    ```bash
-   uv sync
+   pip install -e ".[dev]"
    ```
 
 4. Set up your API key:
    ```bash
-   cp .env.example .env
-   # Edit .env and add your GOOGLE_API_KEY
+   cp env.example .env
+   # Edit .env and add your API_KEY and preferred MODEL
    ```
 
    The `.env` file is automatically loaded - no need to `source` it!
 
-5. Install the CLI tool:
+5. (Optional) Install pre-commit hooks for code quality:
    ```bash
-   uv pip install -e .
-   ```
-
-6. **Activate the virtual environment** (or use `uv run`):
-   ```bash
-   # Option 1: Activate venv
-   source .venv/bin/activate
-
-   # Option 2: Use uv run (recommended)
-   uv run bash-ai "Hello"
-   ```
-
-   To make `bash-ai` available globally, add to your `~/.bashrc` or `~/.zshrc`:
-   ```bash
-   export PATH="$PATH:/path/to/bash.ai/.venv/bin"
+   pre-commit install
    ```
 
 ## Usage
@@ -162,76 +149,108 @@ The tool provides intelligent command suggestions and auto-completion:
 
 ### Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root (see `env.example`):
 
 ```bash
-GOOGLE_API_KEY=your-api-key-here
-GEMINI_MODEL=gemini-2.0-flash
-DEFAULT_BLACKLIST=rm,dd,format,mkfs
+API_KEY=your-api-key-here
+MODEL=gpt-4o-mini
 ```
 
 The `.env` file is automatically loaded when you run the application - no need to `source` it!
 
-Alternatively, you can export it directly in your shell:
+### Supported Models
+
+`bash.ai` uses [LiteLLM](https://litellm.ai/) for multi-provider support. You can use models from:
+
+- **OpenAI**: `gpt-4o-mini`, `gpt-4`, `gpt-3.5-turbo`, etc.
+- **Anthropic**: `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, etc.
+- **Google**: `gemini/gemini-2.0-flash`, `gemini/gemini-pro`, etc.
+- **And many more** - see [LiteLLM documentation](https://docs.litellm.ai/docs/providers) for the full list
+
+To use a different model, set the `MODEL` environment variable:
 ```bash
-export GOOGLE_API_KEY="your-api-key-here"
-bash-ai "Hello"
+MODEL=anthropic/claude-3-opus-20240229
 ```
+
+### Commands Configuration (Allowlist/Blacklist)
+
+The allowlist and blacklist are managed in `config/commands.json`. This file is automatically created and updated by the agent.
+
+```json
+{
+  "allowlist": [
+    "ls",
+    "git"
+  ],
+  "blacklist": [
+    "rm",
+    "dd"
+  ]
+}
+```
+
+You can manually edit this file, or use the agent's tools to manage it.
 
 ## Development
 
 ### Prerequisites
 
 - Python 3.12+
-- uv (package manager)
-- pre-commit (for git hooks)
+- `pip` (Python package installer)
+- `pre-commit` (for git hooks)
 
 ### Setup
 
 ```bash
 # Install dependencies
-uv sync --dev
+pip install -e ".[dev]"
 
 # Install pre-commit hooks
-uv run pre-commit install
+pre-commit install
 ```
 
 ### Running Tests
 
 ```bash
-uv run pytest
+pytest
 ```
 
-### Linting
+### Linting & Type Checking
 
 ```bash
-uv run ruff check .
-uv run black --check .
-uv run mypy bash_ai
+ruff check .
+black --check .
+mypy bash_ai
 ```
 
 ### Formatting
 
 ```bash
-uv run black .
-uv run ruff format .
+black .
+ruff format .
 ```
 
 ## Project Structure
 
 ```
 bash.ai/
-├── bash_ai/              # Main package
-│   ├── __init__.py
-│   ├── config.py         # Configuration management
-│   ├── agents.py         # Agent definitions
-│   ├── runner.py         # Agent execution
-│   └── cli.py            # CLI interface
-├── tests/                # Test files
-├── pyproject.toml        # Project configuration
-├── .env.example          # Example environment file
-├── README.md             # This file
+├── .github/              # GitHub Actions workflows
+├── bash_ai/              # Main application source code
+│   ├── agent/            # Agent definitions and logic
+│   ├── config/           # Configuration management
+│   ├── logging/          # Logging utilities
+│   ├── runner/           # Agent execution logic
+│   ├── tools/            # Custom tools for bash execution
+│   └── ui/               # Text User Interface (TUI) and CLI
+├── config/               # Persistent configuration files (e.g., commands.json)
+├── docs/                 # Project documentation (architecture, libraries, etc.)
+├── tests/                # Unit and integration tests
+├── .env.example          # Example environment variables
+├── pyproject.toml        # Project metadata and build configuration
+├── README.md             # Project README
+├── CHANGELOG.md          # Project changelog
 ├── CONTRIBUTING.md       # Contribution guidelines
+├── SECURITY.md           # Security policy
 └── LICENSE               # License file
 ```
 
@@ -254,8 +273,8 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Acknowledgments
 
-- Built with [Google ADK](https://github.com/google/adk)
-- Uses [Gemini](https://deepmind.google/technologies/gemini/) models
+- Powered by [LiteLLM](https://litellm.ai/) for seamless LLM integration
+- Uses [Gemini](https://deepmind.google/technologies/gemini/) models (configurable)
 
 ## Roadmap
 
