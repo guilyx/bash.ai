@@ -30,5 +30,5 @@ def test_settings_loads_from_env(monkeypatch):
     bash_ai.config._settings = None
 
     settings = get_settings()
-    assert settings.google_api_key == "test-key"
+    assert settings.api_key == "test-key"
     assert settings.model == "gemini-test"

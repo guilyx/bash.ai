@@ -130,7 +130,7 @@ class BashAIApp(App):
         """Update the configuration bar."""
         try:
             settings = get_settings()
-            api_key_status = "✓" if settings.google_api_key else "✗"
+            api_key_status = "✓" if settings.api_key else "✗"
             model = settings.model
         except ValueError:
             api_key_status = "✗"
@@ -292,7 +292,7 @@ Just type your prompt normally (no prefix needed) to interact with the AI agent.
                 config_info = f"""
 **Configuration:**
 - Model: {settings.model}
-- API Key: {'✓ Set' if settings.google_api_key else '✗ Not Set'}
+- API Key: {'✓ Set' if settings.api_key else '✗ Not Set'}
 - Config File: {self.config_manager.config_path}
 - Allowlist: {', '.join(self.current_allowlist) if self.current_allowlist else 'None'}
 - Blacklist: {', '.join(self.current_blacklist) if self.current_blacklist else 'None'}
