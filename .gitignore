@@ -58,8 +58,8 @@ dmypy.json
 # Ruff
 .ruff_cache/
 
-# Pre-commit
-.pre-commit-*
+# Pre-commit (keep config, ignore cache)
+.pre-commit-*.yaml.cache
 
 # Build artifacts
 *.whl
