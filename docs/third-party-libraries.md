@@ -45,7 +45,7 @@ This document outlines the key third-party libraries used in the `bash.ai` proje
 
 **Why they're used**: They provide a modern, developer-friendly interface that's both functional and visually appealing.
 
-**Documentation**: 
+**Documentation**:
 - Rich: https://rich.readthedocs.io/
 - Textual: https://textual.textualize.io/
 

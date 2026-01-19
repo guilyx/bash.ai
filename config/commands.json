@@ -1,5 +1,23 @@
 {
-  "allowlist": [],
+  "allowlist": [
+    "ls",
+    "cd",
+    "pwd",
+    "echo",
+    "cat",
+    "history",
+    "whoami",
+    "date",
+    "cal",
+    "df",
+    "du",
+    "uptime",
+    "w",
+    "head",
+    "tail",
+    "apt",
+    "apt-get"
+  ],
   "blacklist": [
     "rm",
     "dd",

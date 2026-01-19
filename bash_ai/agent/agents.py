@@ -1,12 +1,12 @@
-"""Agent definitions for bash.ai using LiteLLM."""
+"""Agent definitions for bash.ai."""
 
-import json
-from typing import Any
+import os
 
-from litellm import completion
+from google.adk.agents import LlmAgent
+from google.adk.models.lite_llm import LiteLlm
 
 from ..config import get_settings
-from ..tools import get_bash_tools_dict, set_allowlist_blacklist
+from ..tools import get_bash_tools
 
 
 def build_agent_instruction(allowed_commands: list[str], blacklisted_commands: list[str]) -> str:
@@ -139,17 +139,26 @@ Remember: You're talking to a developer. Be efficient, technical, and direct. Ex
 def get_agent(
     allowed_commands: list[str] | None = None,
     blacklisted_commands: list[str] | None = None,
-):
-    """Create and return an agent function that uses LiteLLM.
+) -> LlmAgent:
+    """Create and return the agent with code execution capabilities.
 
     Args:
         allowed_commands: Optional list of allowed commands (overrides default)
         blacklisted_commands: Optional list of blacklisted commands (overrides default)
 
     Returns:
-        A function that can be called with (messages, tools) to get agent responses
+        LlmAgent: The configured agent with code execution
     """
     settings = get_settings()
+
+    # Set API key for LiteLLM
+    if settings.api_key:
+        os.environ.setdefault("OPENAI_API_KEY", settings.api_key)
+        # Also set provider-specific keys if needed
+        if settings.model.startswith("anthropic/"):
+            os.environ.setdefault("ANTHROPIC_API_KEY", settings.api_key)
+        elif settings.model.startswith("gemini/") or "gemini" in settings.model.lower():
+            os.environ.setdefault("GOOGLE_API_KEY", settings.api_key)
 
     # Use provided lists or defaults
     allowed = allowed_commands if allowed_commands is not None else settings.default_allowlist
@@ -157,36 +166,21 @@ def get_agent(
         blacklisted_commands if blacklisted_commands is not None else settings.default_blacklist
     )
 
-    # Set global allowlist/blacklist for tools
-    set_allowlist_blacklist(allowlist=allowed, blacklist=blacklisted)
-
     instruction = build_agent_instruction(allowed, blacklisted)
 
-    def agent_function(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None):
-        """Execute agent with LiteLLM.
+    # Get bash execution tools with allowlist/blacklist
+    bash_tools = get_bash_tools(allowlist=allowed, blacklist=blacklisted)
 
-        Args:
-            messages: List of message dicts with 'role' and 'content'
-            tools: Optional list of tool definitions for function calling
+    # Create LiteLLM model wrapper
+    lite_llm_model = LiteLlm(model=settings.model)
 
-        Returns:
-            Response from LiteLLM
-        """
-        # Add system instruction
-        system_message = {"role": "system", "content": instruction}
-        if messages and messages[0].get("role") == "system":
-            messages[0] = system_message
-        else:
-            messages.insert(0, system_message)
+    # Create agent with LiteLLM model and custom bash tools
+    agent = LlmAgent(
+        name="bash_agent",
+        model=lite_llm_model,
+        tools=bash_tools,
+        description="An AI-powered bash environment assistant that can answer questions and execute terminal commands to help with complex workflows.",
+        instruction=instruction,
+    )
 
-        response = completion(
-            model=settings.model,
-            messages=messages,
-            tools=tools,
-            api_key=settings.api_key,
-            api_base=settings.api_base,
-        )
-
-        return response
-
-    return agent_function
+    return agent
