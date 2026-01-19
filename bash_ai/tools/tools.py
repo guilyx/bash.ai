@@ -6,7 +6,7 @@ from typing import Any
 
 from google.adk.tools import FunctionTool, ToolContext
 
-from ..logging import log_tool_call
+from ..logging import log_terminal_error, log_terminal_output, log_tool_call
 
 # Global variable for working directory
 GLOBAL_CWD = os.getcwd()  # Default to current directory
@@ -158,12 +158,23 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
             "cmd": cmd,
         }
 
+        # Log tool call to conversation log
         log_tool_call(
             "execute_bash",
             {"cmd": cmd, "cwd": str(GLOBAL_CWD)},
             result,
             success=(process.returncode == 0),
         )
+
+        # Log terminal output to terminal log
+        log_terminal_output(
+            command=cmd,
+            stdout=stdout,
+            stderr=stderr,
+            exit_code=process.returncode,
+            cwd=str(GLOBAL_CWD),
+        )
+
         return result
     except Exception as e:
         error_result = {
@@ -171,7 +182,10 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
             "message": f"Error executing command: {e}",
             "cmd": cmd,
         }
+        # Log tool call to conversation log
         log_tool_call("execute_bash", {"cmd": cmd}, error_result, success=False)
+        # Log terminal error to terminal log
+        log_terminal_error(command=cmd, error=str(e), cwd=str(GLOBAL_CWD))
         return error_result
 
 
@@ -505,5 +519,3 @@ def get_bash_tools(allowlist: list[str] | None = None, blacklist: list[str] | No
     ]
 
     return tools
-
-
