@@ -1,10 +1,9 @@
 """Tests for configuration management."""
 
-import os
 
 import pytest
 
-from bash_ai.config.config import Settings, get_settings
+from bash_ai.config.config import get_settings
 
 
 def test_settings_requires_api_key(monkeypatch):
