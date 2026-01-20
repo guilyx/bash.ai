@@ -1,9 +1,11 @@
 """Text User Interface for bash.ai - Terminal chat interface."""
 
+import asyncio
 from rich.console import Console
 from textual.app import App, ComposeResult
 from textual.containers import Container, VerticalScroll
 from textual.events import Key
+from textual.timer import Timer
 from textual.widgets import Footer, Header, Input, Markdown, Static
 
 from ..config import get_settings
@@ -48,13 +50,15 @@ class BashAIApp(App):
     }
 
     .user-message {
-        background: $primary 20%;
-        border-left: solid $primary;
+        background: rgb(30, 60, 90);
+        border-left: thick rgb(100, 150, 200);
+        color: rgb(200, 220, 255);
     }
 
     .agent-message {
-        background: $panel;
-        border-left: solid $success;
+        background: rgb(30, 80, 60);
+        border-left: thick rgb(100, 200, 150);
+        color: rgb(200, 255, 220);
     }
 
     .system-message {
@@ -92,6 +96,10 @@ class BashAIApp(App):
         self.current_blacklist = self.config_manager.get_blacklist()
         self.command_history: list[str] = []
         self.history_index = -1
+        self.thinking_timer: Timer | None = None
+        self.thinking_animation_index = 0
+        self.thinking_message_id: int | None = None
+        self.agent_task: asyncio.Task | None = None
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
@@ -151,23 +159,63 @@ class BashAIApp(App):
         """Add a message to the display."""
         self.messages.append({"content": content, "type": message_type})
         self.update_messages_display()
+        self.scroll_to_bottom()
 
     def add_system_message(self, content: str):
         """Add a system message."""
         self.add_message(content, "system")
+
+    def scroll_to_bottom(self):
+        """Scroll messages container to the bottom."""
+        messages_container = self.query_one("#messages-container", VerticalScroll)
+        messages_container.scroll_end(animate=False)
 
     def update_messages_display(self):
         """Update the messages display."""
         messages_md = []
         for msg in self.messages:
             if msg["type"] == "user":
-                messages_md.append(f"**You:** {msg['content']}\n")
+                messages_md.append(f"**👤 You:**\n\n{msg['content']}\n")
             elif msg["type"] == "agent":
-                messages_md.append(f"{msg['content']}\n")
+                messages_md.append(f"**🤖 Agent:**\n\n{msg['content']}\n")
             else:  # system
-                messages_md.append(f"*System:* {msg['content']}\n")
+                messages_md.append(f"*⚙️ System:* {msg['content']}\n")
 
         self.query_one("#messages-display", Markdown).update("---\n".join(messages_md))
+        self.scroll_to_bottom()
+
+    def start_thinking_animation(self, message_id: int):
+        """Start the thinking animation."""
+        self.thinking_message_id = message_id
+        self.thinking_animation_index = 0
+        self.thinking_timer = self.set_interval(0.5, self.update_thinking_animation)
+
+    def stop_thinking_animation(self):
+        """Stop the thinking animation."""
+        if self.thinking_timer:
+            self.thinking_timer.stop()
+            self.thinking_timer = None
+        self.thinking_message_id = None
+        self.thinking_animation_index = 0
+
+    def update_thinking_animation(self):
+        """Update the thinking animation."""
+        if self.thinking_message_id is None:
+            return
+
+        animation_frames = [
+            "🤖 Agent is thinking",
+            "🤖 Agent is thinking.",
+            "🤖 Agent is thinking..",
+            "🤖 Agent is thinking...",
+        ]
+
+        self.thinking_animation_index = (self.thinking_animation_index + 1) % len(animation_frames)
+        frame = animation_frames[self.thinking_animation_index]
+
+        if 0 <= self.thinking_message_id < len(self.messages):
+            self.messages[self.thinking_message_id]["content"] = f"[bold cyan]{frame}[/bold cyan]"
+            self.update_messages_display()
 
     async def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle input submission."""
@@ -196,7 +244,8 @@ class BashAIApp(App):
             # Regular prompt - send to agent
             self.add_message(prompt, "user")
             log_conversation("user", prompt)
-            await self.send_prompt(prompt)
+            # Start agent task (non-blocking)
+            self.agent_task = asyncio.create_task(self.send_prompt(prompt))
 
     async def handle_command(self, command: str):
         """Handle slash commands."""
@@ -401,18 +450,19 @@ Just type your prompt normally (no prefix needed) to interact with the AI agent.
             input_widget.cursor_position = i + 1
             event.prevent_default()
 
-    async def send_prompt(self, prompt: str, stream: bool = False):
-        """Send the prompt to the agent."""
+    async def send_prompt(self, prompt: str, stream: bool = True):
+        """Send the prompt to the agent (non-blocking)."""
         # Get current allowlist/blacklist from config
         allowlist = self.current_allowlist if self.current_allowlist else None
         blacklist = self.current_blacklist if self.current_blacklist else None
 
-        # Show thinking indicator
+        # Show thinking indicator with animation
         thinking_id = len(self.messages)
         self.messages.append(
-            {"content": "[bold blue]Agent is thinking...[/bold blue]", "type": "agent"}
+            {"content": "[bold cyan]🤖 Agent is thinking[/bold cyan]", "type": "agent"}
         )
         self.update_messages_display()
+        self.start_thinking_animation(thinking_id)
 
         try:
             if stream:
@@ -422,7 +472,8 @@ Just type your prompt normally (no prefix needed) to interact with the AI agent.
                 def stream_callback(text: str):
                     nonlocal response_text
                     response_text += text
-                    # Update the last message
+                    # Stop animation and update with actual response
+                    self.stop_thinking_animation()
                     self.messages[thinking_id]["content"] = response_text
                     self.update_messages_display()
 
@@ -433,6 +484,7 @@ Just type your prompt normally (no prefix needed) to interact with the AI agent.
                     stream_callback=stream_callback,
                 )
                 # Final update
+                self.stop_thinking_animation()
                 self.messages[thinking_id]["content"] = response
             else:
                 # Standard mode
@@ -441,13 +493,17 @@ Just type your prompt normally (no prefix needed) to interact with the AI agent.
                     allowed_commands=allowlist,
                     blacklisted_commands=blacklist,
                 )
+                self.stop_thinking_animation()
                 self.messages[thinking_id]["content"] = response
-                # Note: run_agent already logs the conversation
 
             self.update_messages_display()
         except Exception as e:
-            self.messages[thinking_id]["content"] = f"[bold red]Error:[/bold red] {e}"
+            self.stop_thinking_animation()
+            self.messages[thinking_id]["content"] = f"[bold red]❌ Error:[/bold red] {e}"
             self.update_messages_display()
+        finally:
+            # Re-focus input so user can continue typing
+            self.query_one("#prompt-input", Input).focus()
 
 
 def run_tui():
