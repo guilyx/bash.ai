@@ -5,31 +5,28 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Any
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import (
     Completer,
-    Completion,
     FuzzyCompleter,
     PathCompleter,
     WordCompleter,
 )
-from prompt_toolkit.formatted_text import FormattedText, ANSI
+from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.history import FileHistory, InMemoryHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.lexers import PygmentsLexer
-from prompt_toolkit.search import SearchDirection
 from prompt_toolkit.styles import Style
 from pygments.lexers.shell import BashLexer
 from rich.console import Console
-from rich.markdown import Markdown
-from rich.syntax import Syntax
-from rich.spinner import Spinner
 from rich.live import Live
+from rich.markdown import Markdown
+from rich.spinner import Spinner
+from rich.syntax import Syntax
 from rich.text import Text
 
-from ..config import get_settings
+from ..completions import CompletionLoader, CompletionRegistry
 from ..config.config_manager import ConfigManager
 from ..logging import (
     initialize_session_log,
@@ -38,12 +35,11 @@ from ..logging import (
     log_terminal_error,
     log_terminal_output,
 )
-from ..completions import CompletionLoader, CompletionRegistry
 from ..plugins import PluginManager, ZshBindingsPlugin
 from ..plugins.cd_completer import CdCompleter
-from ..plugins.enhancers import EnhancerManager, LsColorEnhancer, CdEnhancementPlugin
+from ..plugins.enhancers import CdEnhancementPlugin, EnhancerManager, LsColorEnhancer
 from ..runner import run_agent
-from ..tools.tools import GLOBAL_CWD, set_allowlist_blacklist
+from ..tools import GLOBAL_CWD, set_allowlist_blacklist  # noqa: F401
 from .banner import print_banner
 
 # AI assistance trigger prefix
@@ -166,7 +162,9 @@ def format_prompt(cwd: Path):
 class BashCompleter(Completer):
     """Custom completer for bash commands with context-aware completion."""
 
-    def __init__(self, cwd: Path | None = None, completion_registry: CompletionRegistry | None = None):
+    def __init__(
+        self, cwd: Path | None = None, completion_registry: CompletionRegistry | None = None
+    ):
         """Initialize the bash completer.
 
         Args:
@@ -211,8 +209,7 @@ class BashCompleter(Completer):
 
             try:
                 completions = completion_func.func(current_word, parts, word_index)
-                for completion in completions:
-                    yield completion
+                yield from completions
             except Exception:
                 # If completion function fails, fall back to default
                 pass
@@ -329,11 +326,14 @@ class TerminalApp:
         self.completion_loader.load_default_completions()
         # Register built-in git completion
         from ..completions.git import complete_git
+
         self.completion_registry.register("git", complete_git, "Git command completion")
 
         # Setup prompt_toolkit
         # Pass a function to get current directory dynamically
-        self.completer = BashCompleter(cwd=self.current_dir, completion_registry=self.completion_registry)
+        self.completer = BashCompleter(
+            cwd=self.current_dir, completion_registry=self.completion_registry
+        )
         self.completer.get_current_dir = lambda: self.current_dir
         self.history = InMemoryHistory()
 
