@@ -490,6 +490,106 @@ def list_blacklist() -> dict:
     return result
 
 
+def is_in_allowlist(command: str) -> dict:
+    """
+    Check if a command is in the allowlist.
+
+    This is useful for checking command permissions before execution.
+    The function checks if the base command (first word) matches any entry in the allowlist.
+
+    Args:
+        command: The command to check (e.g., "ls", "git status", "docker ps").
+
+    Returns:
+        A dictionary with status, whether the command is in the allowlist, and the matched entry if found.
+    """
+    global GLOBAL_ALLOWLIST
+
+    # Extract base command
+    cmd_parts = command.strip().split()
+    if not cmd_parts:
+        result = {
+            "status": "error",
+            "message": "Empty command",
+            "in_allowlist": False,
+        }
+        log_tool_call("is_in_allowlist", {"command": command}, result, success=False)
+        return result
+
+    base_cmd = cmd_parts[0]
+
+    # Check if command is in allowlist
+    in_allowlist = False
+    matched_entry = None
+
+    if GLOBAL_ALLOWLIST:
+        for allowed_cmd in GLOBAL_ALLOWLIST:
+            if allowed_cmd in base_cmd or base_cmd in allowed_cmd:
+                in_allowlist = True
+                matched_entry = allowed_cmd
+                break
+
+    result = {
+        "status": "success",
+        "command": command,
+        "base_command": base_cmd,
+        "in_allowlist": in_allowlist,
+        "matched_entry": matched_entry,
+    }
+    log_tool_call("is_in_allowlist", {"command": command}, result, success=True)
+    return result
+
+
+def is_in_blacklist(command: str) -> dict:
+    """
+    Check if a command is in the blacklist.
+
+    This is useful for checking if a command is blocked before attempting execution.
+    The function checks if the base command (first word) matches any entry in the blacklist.
+
+    Args:
+        command: The command to check (e.g., "rm", "dd if=/dev/zero", "format c:").
+
+    Returns:
+        A dictionary with status, whether the command is in the blacklist, and the matched entry if found.
+    """
+    global GLOBAL_BLACKLIST
+
+    # Extract base command
+    cmd_parts = command.strip().split()
+    if not cmd_parts:
+        result = {
+            "status": "error",
+            "message": "Empty command",
+            "in_blacklist": False,
+        }
+        log_tool_call("is_in_blacklist", {"command": command}, result, success=False)
+        return result
+
+    base_cmd = cmd_parts[0]
+
+    # Check if command is in blacklist
+    in_blacklist = False
+    matched_entry = None
+
+    if GLOBAL_BLACKLIST:
+        for blacklisted in GLOBAL_BLACKLIST:
+            if blacklisted in base_cmd or base_cmd in blacklisted:
+                in_blacklist = True
+                matched_entry = blacklisted
+                break
+
+    result = {
+        "status": "success",
+        "command": command,
+        "base_command": base_cmd,
+        "in_blacklist": in_blacklist,
+        "matched_entry": matched_entry,
+    }
+    log_tool_call("is_in_blacklist", {"command": command}, result, success=True)
+    return result
+
+
 def get_bash_tools(allowlist: list[str] | None = None, blacklist: list[str] | None = None):
     """Get bash execution tools for the agent (Google ADK format).
 
@@ -506,7 +606,7 @@ def get_bash_tools(allowlist: list[str] | None = None, blacklist: list[str] | No
     # Wrap tools appropriately
     # execute_bash handles confirmation internally for non-allowlisted commands
     # Management tools always require confirmation
-    # List tools don't require confirmation (read-only)
+    # List and check tools don't require confirmation (read-only)
     tools = [
         set_cwd,  # No confirmation needed for directory changes
         FunctionTool(execute_bash),  # Confirmation handled internally
@@ -516,6 +616,8 @@ def get_bash_tools(allowlist: list[str] | None = None, blacklist: list[str] | No
         FunctionTool(remove_from_blacklist, require_confirmation=True),
         list_allowlist,  # Read-only, no confirmation needed
         list_blacklist,  # Read-only, no confirmation needed
+        is_in_allowlist,  # Read-only, no confirmation needed
+        is_in_blacklist,  # Read-only, no confirmation needed
     ]
 
     return tools
