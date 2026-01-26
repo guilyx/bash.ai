@@ -4,7 +4,21 @@ The bash.ai plugin system allows you to extend the terminal environment with cus
 
 ## Overview
 
-Plugins are checked **before** standard command execution. If a plugin handles a command, it executes and returns a result. If no plugin handles it, the command falls through to standard bash execution.
+bash.ai has two types of plugins:
+
+1. **Command Handlers**: Plugins that completely handle command execution (e.g., zsh bindings)
+2. **Command Enhancers**: Plugins that enhance/enrich command output without replacing execution (e.g., colored ls output)
+
+### Command Handlers
+
+Command handlers are checked **before** standard command execution. If a plugin handles a command, it executes and returns a result. If no plugin handles it, the command falls through to standard bash execution.
+
+### Command Enhancers
+
+Command enhancers intercept command output **after** execution and can:
+- Add colors and formatting to output
+- Provide helpful hints and suggestions
+- Enhance readability without changing functionality
 
 ## Plugin Architecture
 
@@ -52,7 +66,7 @@ class MyPlugin(Plugin):
         try:
             # Your plugin logic here
             result = "Plugin output"
-            
+
             return {
                 "handled": True,      # Must be True if plugin handled the command
                 "output": result,     # Standard output (optional)
@@ -257,7 +271,7 @@ class QuickNavPlugin(Plugin):
         parts = command.strip().split()
         if len(parts) != 2:
             return {"handled": False}
-        
+
         target = parts[1]
         # Your navigation logic here
         # ...
@@ -269,9 +283,122 @@ class QuickNavPlugin(Plugin):
         }
 ```
 
+## Command Enhancers
+
+Command enhancers allow you to enrich command output without replacing command execution. They're perfect for adding colors, formatting, hints, and other visual enhancements.
+
+### Creating a Command Enhancer
+
+Create a new file in `bash_ai/plugins/` (e.g., `my_enhancer.py`):
+
+```python
+from bash_ai.plugins.enhancers import CommandEnhancer
+from typing import Any
+
+class MyEnhancer(CommandEnhancer):
+    """My custom command enhancer."""
+
+    def name(self) -> str:
+        return "my_enhancer"
+
+    def should_enhance(self, command: str) -> bool:
+        """Check if this enhancer should enhance the command."""
+        return command.startswith("mycommand")
+
+    def enhance_output(self, command: str, stdout: str, stderr: str, exit_code: int, cwd: str) -> dict[str, Any]:
+        """Enhance the command output."""
+        # Your enhancement logic here
+        enhanced_stdout = stdout  # Modify stdout
+        hints = []  # Optional hints to display
+
+        return {
+            "enhanced": True,  # True if output was modified
+            "stdout": enhanced_stdout,
+            "stderr": stderr,  # Can also enhance stderr
+            "hints": hints,  # List of hint strings to display
+        }
+```
+
+### Registering an Enhancer
+
+Add your enhancer to `bash_ai/ui/tui.py`:
+
+```python
+from ..plugins.enhancers import MyEnhancer
+
+# In TerminalApp.__init__:
+self.enhancer_manager.register(MyEnhancer())
+```
+
+### Built-in Enhancers
+
+bash.ai includes several built-in enhancers:
+
+#### LsColorEnhancer
+
+Adds color coding to `ls` output:
+- **Blue (bold)**: Directories
+- **Cyan**: Symlinks
+- **Green**: Executable files
+- **Yellow**: Archive files (.zip, .tar, etc.)
+- **Magenta**: Image/media files
+- **Default**: Regular files
+
+#### CdEnhancementPlugin
+
+Provides helpful hints when `cd` fails:
+- Suggests similar directory names when a directory doesn't exist
+- Helps with typos and partial matches
+
+### Enhancer Return Values
+
+Your enhancer's `enhance_output()` method must return a dictionary with:
+
+- **`enhanced`** (bool): `True` if output was modified, `False` otherwise
+- **`stdout`** (str): Enhanced or original stdout
+- **`stderr`** (str): Enhanced or original stderr
+- **`hints`** (list[str]): Optional list of hint messages to display
+
+### Example: Adding Colors to Command Output
+
+```python
+class ColorfulOutputEnhancer(CommandEnhancer):
+    """Add colors to specific command outputs."""
+
+    RESET = "\033[0m"
+    GREEN = "\033[32m"
+    RED = "\033[31m"
+
+    def name(self) -> str:
+        return "colorful_output"
+
+    def should_enhance(self, command: str) -> bool:
+        return command.startswith("echo ")
+
+    def enhance_output(self, command: str, stdout: str, stderr: str, exit_code: int, cwd: str) -> dict[str, Any]:
+        if exit_code == 0:
+            enhanced_stdout = f"{self.GREEN}{stdout}{self.RESET}"
+        else:
+            enhanced_stderr = f"{self.RED}{stderr}{self.RESET}"
+            return {
+                "enhanced": True,
+                "stdout": stdout,
+                "stderr": enhanced_stderr,
+                "hints": [],
+            }
+
+        return {
+            "enhanced": True,
+            "stdout": enhanced_stdout,
+            "stderr": stderr,
+            "hints": [],
+        }
+```
+
 ## Questions?
 
 - Check existing plugins in `bash_ai/plugins/` for examples
+- Check existing enhancers in `bash_ai/plugins/enhancers.py` for enhancement examples
 - Open a [Discussion](https://github.com/made-after-dark/bash.ai/discussions) for questions
 - Review [CONTRIBUTING.md](../CONTRIBUTING.md) for general contribution guidelines
 
