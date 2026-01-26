@@ -1,0 +1,104 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published, edited]
+  # Note: We use GitHub Releases instead of direct tag pushes for:
+  # - Better visibility and release notes
+  # - More intentional publishing (less accidental)
+  # - Better control with environment protection rules
+  # 'edited' type allows re-running by editing the release
+  # If you need tag-only publishing, uncomment below:
+  # push:
+  #   tags:
+  #     - "v*"
+
+jobs:
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/flourish/
+    permissions:
+      contents: read
+      id-token: write  # Required for PyPI trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for version detection
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Extract version from release tag
+        id: tag_version
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          # GitHub releases provide the tag in github.event.release.tag_name
+          # Remove 'v' prefix if present
+          if [[ "$TAG_NAME" == v* ]]; then
+            VERSION=${TAG_NAME#v}
+          else
+            VERSION="$TAG_NAME"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release tag: $TAG_NAME"
+          echo "Release version: $VERSION"
+
+      - name: Verify version matches pyproject.toml
+        run: |
+          python -m pip install --upgrade pip
+          pip install tomli
+          PYPROJECT_VERSION=$(python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          TAG_VERSION="${{ steps.tag_version.outputs.version }}"
+          if [ "$PYPROJECT_VERSION" != "$TAG_VERSION" ]; then
+            echo "Error: Version mismatch!"
+            echo "pyproject.toml version: $PYPROJECT_VERSION"
+            echo "Tag version: $TAG_VERSION"
+            exit 1
+          fi
+          echo "✓ Version matches: $PYPROJECT_VERSION"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check package
+        run: twine check dist/*
+
+      - name: Check if pre-release
+        id: check_prerelease
+        run: |
+          if [ "${{ github.event.release.prerelease }}" == "true" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⚠️  Pre-release detected - skipping PyPI publish"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "✓ Final release - will publish to PyPI"
+          fi
+
+      - name: Publish to PyPI
+        if: steps.check_prerelease.outputs.skip == 'false'
+        # Option 1: PyPI Trusted Publishing (Recommended)
+        # Configure at: https://pypi.org/manage/account/publishing/
+        # Add your repository URL and workflow name
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          print-hash: true
+
+      # Option 2: Using API Token (Alternative)
+      # Uncomment below and comment out the above step if using API token
+      # - name: Publish to PyPI
+      #   env:
+      #     TWINE_USERNAME: __token__
+      #     TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      #   run: twine upload dist/* --verbose

@@ -1,6 +1,5 @@
 {
   "allowlist": [
-    "ls",
     "cd",
     "pwd",
     "echo",
@@ -30,10 +29,11 @@
     "nc",
     "nmap",
     "telnet",
-    "git"
+    "git",
+    "rm",
+    "ls"
   ],
   "blacklist": [
-    "rm",
     "dd",
     "format",
     "mkfs",
