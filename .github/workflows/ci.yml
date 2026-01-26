@@ -21,11 +21,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
       - name: Run black
-        run: black --check bash_ai
+        run: black --check flourish
       - name: Run ruff
-        run: ruff check bash_ai
+        run: ruff check flourish
       - name: Run mypy
-        run: mypy bash_ai --ignore-missing-imports
+        run: mypy flourish --ignore-missing-imports
 
   test:
     name: Test Python ${{ matrix.python-version }}
@@ -44,7 +44,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
       - name: Run tests
-        run: pytest --cov=bash_ai --cov-report=xml --cov-report=term-missing
+        run: pytest --cov=flourish --cov-report=xml --cov-report=term-missing
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
