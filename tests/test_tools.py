@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from flourish.tools.tools import (
+from flourish.tools import (
     add_to_allowlist,
     add_to_blacklist,
     execute_bash,
@@ -29,28 +29,38 @@ from flourish.tools.tools import (
 @pytest.fixture
 def reset_globals():
     """Reset global variables before each test."""
-    from flourish.tools.tools import (
+    from flourish.tools.globals import (
         GLOBAL_ALLOWLIST,
         GLOBAL_BLACKLIST,
         GLOBAL_CWD,
     )
+    import flourish.tools.globals as globals_module
 
-    GLOBAL_ALLOWLIST = None
-    GLOBAL_BLACKLIST = None
-    GLOBAL_CWD = str(Path.cwd())
+    # Save original values
+    original_allowlist = GLOBAL_ALLOWLIST
+    original_blacklist = GLOBAL_BLACKLIST
+    original_cwd = GLOBAL_CWD
+
+    # Reset to defaults
+    globals_module.GLOBAL_ALLOWLIST = None
+    globals_module.GLOBAL_BLACKLIST = None
+    globals_module.GLOBAL_CWD = str(Path.cwd())
+
     yield
-    GLOBAL_ALLOWLIST = None
-    GLOBAL_BLACKLIST = None
-    GLOBAL_CWD = str(Path.cwd())
+
+    # Restore original values
+    globals_module.GLOBAL_ALLOWLIST = original_allowlist
+    globals_module.GLOBAL_BLACKLIST = original_blacklist
+    globals_module.GLOBAL_CWD = original_cwd
 
 
 def test_set_cwd(tmp_path, reset_globals):
     """Test setting current working directory."""
     result = set_cwd(str(tmp_path))
     assert "Working directory set to" in result
-    from flourish.tools.tools import GLOBAL_CWD
+    import flourish.tools.globals as globals_module
 
-    assert GLOBAL_CWD == str(tmp_path)
+    assert globals_module.GLOBAL_CWD == str(tmp_path)
 
 
 def test_set_cwd_invalid(reset_globals):
@@ -70,10 +80,10 @@ def test_get_user(reset_globals):
 def test_set_allowlist_blacklist(reset_globals):
     """Test setting allowlist and blacklist."""
     set_allowlist_blacklist(allowlist=["ls", "cd"], blacklist=["rm"])
-    from flourish.tools.tools import GLOBAL_ALLOWLIST, GLOBAL_BLACKLIST
+    import flourish.tools.globals as globals_module
 
-    assert "ls" in GLOBAL_ALLOWLIST
-    assert "rm" in GLOBAL_BLACKLIST
+    assert "ls" in globals_module.GLOBAL_ALLOWLIST
+    assert "rm" in globals_module.GLOBAL_BLACKLIST
 
 
 def test_execute_bash_simple(reset_globals):
@@ -105,9 +115,9 @@ def test_add_to_allowlist(reset_globals):
     set_allowlist_blacklist(allowlist=[], blacklist=None)
     result = add_to_allowlist("ls", tool_context=None)
     assert result["status"] == "success"
-    from flourish.tools.tools import GLOBAL_ALLOWLIST
+    import flourish.tools.globals as globals_module
 
-    assert "ls" in GLOBAL_ALLOWLIST
+    assert "ls" in globals_module.GLOBAL_ALLOWLIST
 
 
 def test_add_to_blacklist(reset_globals):
@@ -115,9 +125,9 @@ def test_add_to_blacklist(reset_globals):
     set_allowlist_blacklist(allowlist=None, blacklist=[])
     result = add_to_blacklist("rm", tool_context=None)
     assert result["status"] == "success"
-    from flourish.tools.tools import GLOBAL_BLACKLIST
+    import flourish.tools.globals as globals_module
 
-    assert "rm" in GLOBAL_BLACKLIST
+    assert "rm" in globals_module.GLOBAL_BLACKLIST
 
 
 def test_remove_from_allowlist(reset_globals):
@@ -125,9 +135,9 @@ def test_remove_from_allowlist(reset_globals):
     set_allowlist_blacklist(allowlist=["ls"], blacklist=None)
     result = remove_from_allowlist("ls", tool_context=None)
     assert result["status"] == "success"
-    from flourish.tools.tools import GLOBAL_ALLOWLIST
+    import flourish.tools.globals as globals_module
 
-    assert "ls" not in GLOBAL_ALLOWLIST
+    assert "ls" not in globals_module.GLOBAL_ALLOWLIST
 
 
 def test_remove_from_blacklist(reset_globals):
@@ -135,9 +145,9 @@ def test_remove_from_blacklist(reset_globals):
     set_allowlist_blacklist(allowlist=None, blacklist=["rm"])
     result = remove_from_blacklist("rm", tool_context=None)
     assert result["status"] == "success"
-    from flourish.tools.tools import GLOBAL_BLACKLIST
+    import flourish.tools.globals as globals_module
 
-    assert "rm" not in GLOBAL_BLACKLIST
+    assert "rm" not in globals_module.GLOBAL_BLACKLIST
 
 
 def test_get_bash_tools(reset_globals):
