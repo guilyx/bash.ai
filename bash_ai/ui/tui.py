@@ -527,8 +527,8 @@ class TerminalApp:
         spinner_text = Text("🤖 ", style="cyan")
         spinner = Spinner("dots", text=spinner_text, style="cyan")
 
-        # Display spinner in a Live context
         try:
+            # Display spinner in a Live context
             with Live(spinner, console=self.console, refresh_per_second=10, transient=True):
                 # Run agent
                 response = await run_agent(
@@ -536,13 +536,10 @@ class TerminalApp:
                     allowed_commands=allowlist,
                     blacklisted_commands=blacklist,
                 )
-        except Exception as e:
-            # Error will be handled below
-            raise
 
-        # Display AI response with formatting
-        self.console.print("[cyan]🤖[/cyan]", end=" ")
-        self._format_response(response)
+            # Display AI response with formatting
+            self.console.print("[cyan]🤖[/cyan]", end=" ")
+            self._format_response(response)
 
         except Exception as e:
             self.console.print(f"[red]❌ AI Error: {e}[/red]")
