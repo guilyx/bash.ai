@@ -56,11 +56,11 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
     Run a bash command in the global working directory.
 
     This function checks allowlist/blacklist before execution.
-    Commands not in the allowlist require user confirmation.
+    Commands not in the allowlist are automatically added to allowlist and executed.
 
     Args:
         cmd: The shell command to execute.
-        tool_context: Tool context for confirmation (automatically provided by ADK).
+        tool_context: Tool context (ignored, kept for compatibility).
 
     Returns:
         A dictionary with status and output from the command execution.
@@ -94,50 +94,21 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
                 in_allowlist = True
                 break
 
-    # If not in allowlist, require confirmation
+    # If not in allowlist, automatically add it and continue
     if not in_allowlist:
-        if tool_context:
-            tool_confirmation = tool_context.tool_confirmation
-            if not tool_confirmation:
-                # Request confirmation and suggest adding to allowlist
-                tool_context.request_confirmation(
-                    hint=(
-                        f"Command '{base_cmd}' is not in the allowlist. "
-                        f"Do you want to execute: {cmd}?\n\n"
-                        f"To avoid confirmation prompts in the future, you can add this command to the allowlist "
-                        f"using the 'add_to_allowlist' tool. This will allow the agent to execute '{base_cmd}' "
-                        f"without requiring confirmation.\n\n"
-                        f"Respond with 'confirmed: true' to proceed with execution, or 'confirmed: false' to cancel."
-                    ),
-                    payload={"confirmed": False, "cmd": cmd, "suggest_add_to_allowlist": True},
-                )
-                return {
-                    "status": "pending_confirmation",
-                    "message": (
-                        f"Waiting for confirmation to execute: {cmd}\n"
-                        f"Tip: Use 'add_to_allowlist' tool to add '{base_cmd}' to allowlist "
-                        f"and avoid confirmation prompts in the future."
-                    ),
-                }
+        # Automatically add to allowlist
+        if GLOBAL_ALLOWLIST is None:
+            GLOBAL_ALLOWLIST = []
+        if base_cmd not in GLOBAL_ALLOWLIST:
+            GLOBAL_ALLOWLIST.append(base_cmd)
+            # Update config manager if available
+            try:
+                from ..config.config_manager import ConfigManager
 
-            # Check confirmation response
-            confirmed = tool_confirmation.payload.get("confirmed", False)
-            if not confirmed:
-                cancelled_result: dict[str, Any] = {
-                    "status": "cancelled",
-                    "message": f"Execution of '{cmd}' was cancelled by user",
-                }
-                log_tool_call("execute_bash", {"cmd": cmd}, cancelled_result, success=False)
-                return cancelled_result
-        else:
-            # No tool context (LiteLLM mode) - return pending confirmation
-            return {
-                "status": "pending_confirmation",
-                "message": (
-                    f"Command '{base_cmd}' is not in the allowlist. "
-                    f"Use 'add_to_allowlist' tool to add '{base_cmd}' to allowlist, then retry."
-                ),
-            }
+                config_manager = ConfigManager()
+                config_manager.add_to_allowlist(base_cmd)
+            except Exception:
+                pass  # Config manager might not be available
 
     # SECURITY: Final blacklist check before execution (defense in depth)
     # This ensures that even if a command was added to allowlist after initial check,
@@ -205,56 +176,15 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
 
 def add_to_allowlist(command: str, tool_context: ToolContext | None = None) -> dict:
     """
-    Add a command to the allowlist to avoid future confirmation prompts.
-
-    **MANDATORY USE**: Call this tool automatically when `execute_bash` returns status "pending_confirmation".
-    Don't ask the user - just call this tool immediately, then retry the command.
-
-    When to use (automatic, don't ask):
-    - When `execute_bash` returns status "pending_confirmation" - call this immediately
-    - When you need to use a command multiple times in a workflow
-    - When a command fails due to allowlist restrictions but is safe to use
-
-    Workflow:
-    1. Call `execute_bash("some_command")`
-    2. If it returns "pending_confirmation", immediately call `add_to_allowlist("base_command")`
-    3. After confirmation completes, call `execute_bash("some_command")` again
-    4. Command will now execute without confirmation
-
-    The system will handle the confirmation automatically. After adding, the command
-    can be executed without confirmation prompts, improving workflow efficiency.
+    Add a command to the allowlist.
 
     Args:
         command: The base command to add (e.g., "ls", "git", "docker", "npm"). Extract from full command if needed.
-        tool_context: Tool context for confirmation (automatically provided by ADK).
+        tool_context: Tool context (ignored, kept for compatibility).
 
     Returns:
         A dictionary with status, message, and updated allowlist.
     """
-    if tool_context:
-        tool_confirmation = tool_context.tool_confirmation
-        if not tool_confirmation:
-            # Request confirmation
-            tool_context.request_confirmation(
-                hint=(
-                    f"Do you want to add '{command}' to the allowlist?\n"
-                    f"This will allow the agent to execute this command without confirmation in the future."
-                ),
-                payload={"confirmed": False, "command": command},
-            )
-            return {
-                "status": "pending_confirmation",
-                "message": f"Waiting for confirmation to add '{command}' to allowlist",
-            }
-
-        # Check confirmation response
-        confirmed = tool_confirmation.payload.get("confirmed", False)
-        if not confirmed:
-            return {
-                "status": "cancelled",
-                "message": f"Adding '{command}' to allowlist was cancelled",
-            }
-    # If no tool_context (LiteLLM mode), auto-confirm
 
     # Add to allowlist
     global GLOBAL_ALLOWLIST
@@ -282,39 +212,15 @@ def add_to_allowlist(command: str, tool_context: ToolContext | None = None) -> d
 
 def remove_from_allowlist(command: str, tool_context: ToolContext | None = None) -> dict:
     """
-    Remove a command from the allowlist. Requires confirmation.
+    Remove a command from the allowlist.
 
     Args:
         command: The command to remove from the allowlist.
-        tool_context: Tool context for confirmation (automatically provided by ADK).
+        tool_context: Tool context (ignored, kept for compatibility).
 
     Returns:
         A dictionary with status and message.
     """
-    if tool_context:
-        tool_confirmation = tool_context.tool_confirmation
-        if not tool_confirmation:
-            # Request confirmation
-            tool_context.request_confirmation(
-                hint=(
-                    f"Do you want to remove '{command}' from the allowlist?\n"
-                    f"This will require confirmation for this command in the future."
-                ),
-                payload={"confirmed": False, "command": command},
-            )
-            return {
-                "status": "pending_confirmation",
-                "message": f"Waiting for confirmation to remove '{command}' from allowlist",
-            }
-
-        # Check confirmation response
-        confirmed = tool_confirmation.payload.get("confirmed", False)
-        if not confirmed:
-            return {
-                "status": "cancelled",
-                "message": f"Removing '{command}' from allowlist was cancelled",
-            }
-    # If no tool_context (LiteLLM mode), auto-confirm
 
     # Remove from allowlist
     global GLOBAL_ALLOWLIST
@@ -356,35 +262,11 @@ def add_to_blacklist(command: str, tool_context: ToolContext | None = None) -> d
 
     Args:
         command: The base command to blacklist (e.g., "rm", "dd", "format"). Extract the base command from full commands.
-        tool_context: Tool context for confirmation (automatically provided by ADK).
+        tool_context: Tool context (ignored, kept for compatibility).
 
     Returns:
         A dictionary with status, message, and updated blacklist.
     """
-    if tool_context:
-        tool_confirmation = tool_context.tool_confirmation
-        if not tool_confirmation:
-            # Request confirmation
-            tool_context.request_confirmation(
-                hint=(
-                    f"Do you want to add '{command}' to the blacklist?\n"
-                    f"This will permanently block this command from being executed."
-                ),
-                payload={"confirmed": False, "command": command},
-            )
-            return {
-                "status": "pending_confirmation",
-                "message": f"Waiting for confirmation to add '{command}' to blacklist",
-            }
-
-        # Check confirmation response
-        confirmed = tool_confirmation.payload.get("confirmed", False)
-        if not confirmed:
-            return {
-                "status": "cancelled",
-                "message": f"Adding '{command}' to blacklist was cancelled",
-            }
-    # If no tool_context (LiteLLM mode), auto-confirm
 
     # Add to blacklist
     global GLOBAL_BLACKLIST
@@ -412,39 +294,15 @@ def add_to_blacklist(command: str, tool_context: ToolContext | None = None) -> d
 
 def remove_from_blacklist(command: str, tool_context: ToolContext | None = None) -> dict:
     """
-    Remove a command from the blacklist. Requires confirmation.
+    Remove a command from the blacklist.
 
     Args:
         command: The command to remove from the blacklist.
-        tool_context: Tool context for confirmation (automatically provided by ADK).
+        tool_context: Tool context (ignored, kept for compatibility).
 
     Returns:
         A dictionary with status and message.
     """
-    if tool_context:
-        tool_confirmation = tool_context.tool_confirmation
-        if not tool_confirmation:
-            # Request confirmation
-            tool_context.request_confirmation(
-                hint=(
-                    f"Do you want to remove '{command}' from the blacklist?\n"
-                    f"This will allow this command to be executed again (subject to allowlist restrictions)."
-                ),
-                payload={"confirmed": False, "command": command},
-            )
-            return {
-                "status": "pending_confirmation",
-                "message": f"Waiting for confirmation to remove '{command}' from blacklist",
-            }
-
-        # Check confirmation response
-        confirmed = tool_confirmation.payload.get("confirmed", False)
-        if not confirmed:
-            return {
-                "status": "cancelled",
-                "message": f"Removing '{command}' from blacklist was cancelled",
-            }
-    # If no tool_context (LiteLLM mode), auto-confirm
 
     # Remove from blacklist
     global GLOBAL_BLACKLIST
@@ -617,21 +475,18 @@ def get_bash_tools(allowlist: list[str] | None = None, blacklist: list[str] | No
     # Set global allowlist/blacklist
     set_allowlist_blacklist(allowlist, blacklist)
 
-    # Wrap tools appropriately
-    # execute_bash handles confirmation internally for non-allowlisted commands
-    # Management tools always require confirmation
-    # List and check tools don't require confirmation (read-only)
+    # Wrap tools - no confirmations required, all tools execute directly
     tools = [
-        set_cwd,  # No confirmation needed for directory changes
-        FunctionTool(execute_bash),  # Confirmation handled internally
+        set_cwd,
+        FunctionTool(execute_bash, require_confirmation=False),
         FunctionTool(add_to_allowlist, require_confirmation=False),
         FunctionTool(remove_from_allowlist, require_confirmation=False),
         FunctionTool(add_to_blacklist, require_confirmation=False),
-        FunctionTool(remove_from_blacklist, require_confirmation=True),
-        list_allowlist,  # Read-only, no confirmation needed
-        list_blacklist,  # Read-only, no confirmation needed
-        is_in_allowlist,  # Read-only, no confirmation needed
-        is_in_blacklist,  # Read-only, no confirmation needed
+        FunctionTool(remove_from_blacklist, require_confirmation=False),
+        list_allowlist,
+        list_blacklist,
+        is_in_allowlist,
+        is_in_blacklist,
     ]
 
     return tools

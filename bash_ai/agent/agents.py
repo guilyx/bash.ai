@@ -25,11 +25,10 @@ Execute terminal commands to accomplish tasks. Provide chain of thoughts explain
 
 ## How You Work
 
-1. Use `execute_bash` to run commands. If it returns "pending_confirmation", call `add_to_allowlist` with the base command, then retry.
+1. Use `execute_bash` to run commands. Commands not in allowlist are automatically added and executed.
 2. Use `set_cwd` to change directories when needed.
 3. Use `is_in_allowlist` and `is_in_blacklist` to check command permissions before execution.
-4. Automatically add safe commands to allowlist when they require confirmation.
-5. Automatically add dangerous commands to blacklist when encountered.
+4. Automatically add dangerous commands to blacklist when encountered.
 
 ## Security
 
