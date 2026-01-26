@@ -1,23 +1,33 @@
-"""Text User Interface for bash.ai - Terminal chat interface."""
+"""Terminal User Interface for bash.ai - AI-enabled terminal environment."""
 
 import asyncio
-from rich.console import Console
+import os
+import subprocess
+from pathlib import Path
+
 from textual.app import App, ComposeResult
-from textual.containers import Container, VerticalScroll
+from textual.containers import Container, Horizontal, VerticalScroll
 from textual.events import Key
-from textual.timer import Timer
-from textual.widgets import Footer, Header, Input, Markdown, Static
+from textual.widgets import Footer, Header, Input, Static
 
 from ..config import get_settings
 from ..config.config_manager import ConfigManager
-from ..logging import initialize_session_log, log_conversation, log_session_end
-from ..runner import run_agent, run_agent_live
+from ..logging import (
+    initialize_session_log,
+    log_conversation,
+    log_session_end,
+    log_terminal_error,
+    log_terminal_output,
+)
+from ..runner import run_agent
+from ..tools.tools import GLOBAL_CWD, execute_bash, set_allowlist_blacklist
 
-console = Console()
+# AI assistance trigger prefix
+AI_PREFIX = "?"
 
 
-class BashAIApp(App):
-    """Main TUI application for bash.ai - Terminal chat interface."""
+class TerminalApp(App):
+    """AI-enabled terminal environment."""
 
     CSS = """
     Screen {
@@ -32,370 +42,331 @@ class BashAIApp(App):
         text-style: bold;
     }
 
-    .config-bar {
-        background: $panel;
-        padding: 1;
-        border-bottom: solid $primary;
-    }
-
-    .messages {
+    .terminal-output {
         height: 1fr;
         border: solid $primary;
         padding: 1;
+        background: rgb(0, 0, 0);
+        color: rgb(200, 200, 200);
     }
 
-    .message {
-        margin: 1;
-        padding: 1;
+    .terminal-line {
+        margin: 0;
+        padding: 0;
     }
 
-    .user-message {
-        background: rgb(30, 60, 90);
-        border-left: thick rgb(100, 150, 200);
-        color: rgb(200, 220, 255);
+    .command-line {
+        color: rgb(100, 200, 100);
     }
 
-    .agent-message {
-        background: rgb(30, 80, 60);
-        border-left: thick rgb(100, 200, 150);
-        color: rgb(200, 255, 220);
+    .output-line {
+        color: rgb(200, 200, 200);
     }
 
-    .system-message {
-        background: $warning 20%;
-        border-left: solid $warning;
-        text-style: italic;
+    .error-line {
+        color: rgb(255, 100, 100);
+    }
+
+    .ai-line {
+        color: rgb(150, 200, 255);
+    }
+
+    .prompt-line {
+        color: rgb(100, 150, 255);
     }
 
     .input-area {
         border-top: solid $primary;
-        padding: 1;
-        background: $surface;
+        padding: 0 1;
+        background: rgb(20, 20, 20);
     }
 
-    #prompt-input {
-        width: 100%;
+    #prompt-display {
+        width: auto;
+        padding-right: 1;
+    }
+
+    #command-input {
+        width: 1fr;
+        background: rgb(20, 20, 20);
+        color: rgb(200, 200, 200);
     }
     """
 
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("ctrl+c", "quit", "Quit"),
-        ("ctrl+l", "clear_messages", "Clear"),
-        ("?", "show_help", "Help"),
-        ("ctrl+a", "select_all", "Select All"),
-        ("escape", "clear_input", "Clear Input"),
-        ("ctrl+u", "clear_line", "Clear Line"),
+        ("ctrl+l", "clear_screen", "Clear"),
+        ("ctrl+a", "ask_ai", "Ask AI"),
+        ("?", "help", "Help"),
     ]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.config_manager = ConfigManager()
-        self.messages: list[dict[str, str]] = []
         self.current_allowlist = self.config_manager.get_allowlist()
         self.current_blacklist = self.config_manager.get_blacklist()
         self.command_history: list[str] = []
         self.history_index = -1
-        self.thinking_timer: Timer | None = None
-        self.thinking_animation_index = 0
-        self.thinking_message_id: int | None = None
+        self.output_lines: list[tuple[str, str]] = []  # (content, class)
+        self.current_dir = Path.cwd()
         self.agent_task: asyncio.Task | None = None
+
+        # Set global allowlist/blacklist for tools
+        set_allowlist_blacklist(
+            allowlist=self.current_allowlist if self.current_allowlist else None,
+            blacklist=self.current_blacklist if self.current_blacklist else None,
+        )
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
         yield Header(show_clock=True)
-        yield Static("🤖 bash.ai - AI-Powered Bash Environment", classes="header")
+        yield Static("🤖 bash.ai - AI-Enabled Terminal", classes="header")
 
-        # Configuration bar
-        yield Static(id="config-bar", classes="config-bar")
+        # Terminal output area
+        with VerticalScroll(id="terminal-output", classes="terminal-output"):
+            yield Static(id="terminal-content")
 
-        # Messages area
-        with VerticalScroll(id="messages-container", classes="messages"):
-            yield Markdown(id="messages-display")
-
-        # Input area
+        # Input area with prompt
         with Container(classes="input-area"):
-            yield Input(
-                placeholder="Type your prompt or use /help for commands... (↑/↓ for history, Ctrl+U to clear)",
-                id="prompt-input",
-            )
+            with Horizontal():
+                yield Static(id="prompt-display")
+                yield Input(
+                    placeholder="",
+                    id="command-input",
+                )
 
         yield Footer()
 
     def on_mount(self):
         """Called when app starts."""
         # Initialize session log
-        log_file = initialize_session_log()
-        self.add_system_message(
-            f"Welcome to bash.ai! Type /help for available commands. Session log: {log_file}"
-        )
+        initialize_session_log()
+        self.add_output_line("bash.ai - AI-Enabled Terminal Environment", "prompt-line")
+        self.add_output_line("Type commands directly, or use '?' prefix for AI assistance", "prompt-line")
+        self.add_output_line("Press Ctrl+A to ask AI, Ctrl+L to clear, ? for help", "prompt-line")
+        self.add_output_line("", "output-line")
+        self.update_prompt()
+        self.query_one("#command-input", Input).focus()
 
-        self.update_config_bar()
-        # Focus on prompt input
-        self.query_one("#prompt-input", Input).focus()
-
-    def update_config_bar(self):
-        """Update the configuration bar."""
+    def update_prompt(self):
+        """Update the prompt display with current directory."""
         try:
-            settings = get_settings()
-            api_key_status = "✓" if settings.api_key else "✗"
-            model = settings.model
-        except ValueError:
-            api_key_status = "✗"
-            model = "Not configured"
+            # Get relative path from home or absolute if shorter
+            home = Path.home()
+            try:
+                rel_path = self.current_dir.relative_to(home)
+                display_path = f"~/{rel_path}" if str(rel_path) != "." else "~"
+            except ValueError:
+                display_path = str(self.current_dir)
 
-        allowlist_str = ", ".join(self.current_allowlist) if self.current_allowlist else "None"
-        blacklist_str = ", ".join(self.current_blacklist) if self.current_blacklist else "None"
+            prompt = f"[{display_path}] $ "
+            self.query_one("#prompt-display", Static).update(prompt)
+        except Exception:
+            self.query_one("#prompt-display", Static).update("$ ")
 
-        config_text = (
-            f"Model: {model} | "
-            f"API: {api_key_status} | "
-            f"Allowlist: {allowlist_str} | "
-            f"Blacklist: {blacklist_str}"
-        )
-        self.query_one("#config-bar", Static).update(config_text)
+    def add_output_line(self, content: str, css_class: str = "output-line"):
+        """Add a line to the terminal output."""
+        self.output_lines.append((content, css_class))
+        self.update_terminal_display()
 
-    def add_message(self, content: str, message_type: str = "user"):
-        """Add a message to the display."""
-        self.messages.append({"content": content, "type": message_type})
-        self.update_messages_display()
-        self.scroll_to_bottom()
+    def update_terminal_display(self):
+        """Update the terminal content display."""
+        # Map CSS classes to Rich markup colors
+        color_map = {
+            "command-line": "[green]",
+            "output-line": "[white]",
+            "error-line": "[red]",
+            "ai-line": "[cyan]",
+            "prompt-line": "[blue]",
+        }
 
-    def add_system_message(self, content: str):
-        """Add a system message."""
-        self.add_message(content, "system")
+        lines = []
+        for content, css_class in self.output_lines:
+            if content:
+                # Use Rich markup for colors
+                color_tag = color_map.get(css_class, "[white]")
+                # Escape brackets in content to avoid Rich markup conflicts
+                escaped_content = content.replace("[", "\\[").replace("]", "\\]")
+                lines.append(f"{color_tag}{escaped_content}[/]")
+            else:
+                lines.append("")  # Empty line
 
-    def scroll_to_bottom(self):
-        """Scroll messages container to the bottom."""
-        messages_container = self.query_one("#messages-container", VerticalScroll)
-        messages_container.scroll_end(animate=False)
-
-    def update_messages_display(self):
-        """Update the messages display."""
-        messages_md = []
-        for msg in self.messages:
-            if msg["type"] == "user":
-                messages_md.append(f"**👤 You:**\n\n{msg['content']}\n")
-            elif msg["type"] == "agent":
-                messages_md.append(f"**🤖 Agent:**\n\n{msg['content']}\n")
-            else:  # system
-                messages_md.append(f"*⚙️ System:* {msg['content']}\n")
-
-        self.query_one("#messages-display", Markdown).update("---\n".join(messages_md))
-        self.scroll_to_bottom()
-
-    def start_thinking_animation(self, message_id: int):
-        """Start the thinking animation."""
-        self.thinking_message_id = message_id
-        self.thinking_animation_index = 0
-        self.thinking_timer = self.set_interval(0.5, self.update_thinking_animation)
-
-    def stop_thinking_animation(self):
-        """Stop the thinking animation."""
-        if self.thinking_timer:
-            self.thinking_timer.stop()
-            self.thinking_timer = None
-        self.thinking_message_id = None
-        self.thinking_animation_index = 0
-
-    def update_thinking_animation(self):
-        """Update the thinking animation."""
-        if self.thinking_message_id is None:
-            return
-
-        animation_frames = [
-            "🤖 Agent is thinking",
-            "🤖 Agent is thinking.",
-            "🤖 Agent is thinking..",
-            "🤖 Agent is thinking...",
-        ]
-
-        self.thinking_animation_index = (self.thinking_animation_index + 1) % len(animation_frames)
-        frame = animation_frames[self.thinking_animation_index]
-
-        if 0 <= self.thinking_message_id < len(self.messages):
-            self.messages[self.thinking_message_id]["content"] = f"[bold cyan]{frame}[/bold cyan]"
-            self.update_messages_display()
+        content = "\n".join(lines)
+        self.query_one("#terminal-content", Static).update(content)
+        # Scroll to bottom
+        terminal_output = self.query_one("#terminal-output", VerticalScroll)
+        terminal_output.scroll_end(animate=False)
 
     async def on_input_submitted(self, event: Input.Submitted) -> None:
-        """Handle input submission."""
+        """Handle command input submission."""
         input_widget = event.input
-        prompt = input_widget.value.strip()
+        command = input_widget.value.strip()
         input_widget.value = ""
-        self.history_index = -1  # Reset history index
+        self.history_index = -1
 
-        if not prompt:
+        if not command:
             return
 
-        # Add to command history (avoid duplicates)
-        if self.command_history and self.command_history[-1] != prompt:
-            self.command_history.append(prompt)
+        # Add to command history
+        if self.command_history and self.command_history[-1] != command:
+            self.command_history.append(command)
         elif not self.command_history:
-            self.command_history.append(prompt)
+            self.command_history.append(command)
 
         # Limit history size
-        if len(self.command_history) > 100:
+        if len(self.command_history) > 1000:
             self.command_history.pop(0)
 
-        # Handle slash commands
-        if prompt.startswith("/"):
-            await self.handle_command(prompt)
+        # Show the command that was entered
+        self.add_output_line(f"[{self._get_display_path()}] $ {command}", "command-line")
+
+        # Check if it's an AI request
+        if command.startswith(AI_PREFIX):
+            # Remove prefix and send to AI
+            ai_prompt = command[1:].strip()
+            if ai_prompt:
+                await self.handle_ai_request(ai_prompt)
+            else:
+                self.add_output_line("Usage: ? <your question>", "error-line")
         else:
-            # Regular prompt - send to agent
-            self.add_message(prompt, "user")
-            log_conversation("user", prompt)
-            # Start agent task (non-blocking)
-            self.agent_task = asyncio.create_task(self.send_prompt(prompt))
+            # Regular bash command
+            await self.execute_command(command)
 
-    async def handle_command(self, command: str):
-        """Handle slash commands."""
-        parts = command.split(None, 1)
-        cmd = parts[0].lower()
-        args = parts[1] if len(parts) > 1 else ""
+        # Update prompt and refocus input
+        self.update_prompt()
+        self.query_one("#command-input", Input).focus()
 
-        if cmd == "/help":
-            help_text = """
-**Available Commands:**
-- `/allow <command>` - Add command to allowlist
-- `/remove-allow <command>` - Remove command from allowlist
-- `/blacklist <command>` - Add command to blacklist
-- `/remove-blacklist <command>` - Remove command from blacklist
-- `/allowlist` - Show current allowlist
-- `/blacklist` - Show current blacklist
-- `/clear` - Clear message history
-- `/help` - Show this help message
-- `/config` - Show current configuration
-
-**Keyboard Shortcuts:**
-- `↑` / `↓` - Navigate command history
-- `Ctrl+A` - Select all text (terminal dependent)
-- `Ctrl+U` - Clear current line
-- `Ctrl+K` - Clear from cursor to end of line
-- `Ctrl+W` - Delete word before cursor
-- `Escape` - Clear input field
-- `Ctrl+L` - Clear message history
-- `?` - Show help
-- `Q` or `Ctrl+C` - Quit
-
-**Usage:**
-Just type your prompt normally (no prefix needed) to interact with the AI agent.
-            """
-            self.add_system_message(help_text.strip())
-
-        elif cmd == "/allow":
-            if args:
-                self.config_manager.add_to_allowlist(args)
-                self.current_allowlist = self.config_manager.get_allowlist()
-                self.update_config_bar()
-                self.add_system_message(f"✓ Added '{args}' to allowlist")
-            else:
-                self.add_system_message("✗ Usage: /allow <command>")
-
-        elif cmd == "/remove-allow":
-            if args:
-                self.config_manager.remove_from_allowlist(args)
-                self.current_allowlist = self.config_manager.get_allowlist()
-                self.update_config_bar()
-                self.add_system_message(f"✓ Removed '{args}' from allowlist")
-            else:
-                self.add_system_message("✗ Usage: /remove-allow <command>")
-
-        elif cmd == "/blacklist":
-            if args:
-                self.config_manager.add_to_blacklist(args)
-                self.current_blacklist = self.config_manager.get_blacklist()
-                self.update_config_bar()
-                self.add_system_message(f"✓ Added '{args}' to blacklist")
-            else:
-                self.add_system_message("✗ Usage: /blacklist <command>")
-
-        elif cmd == "/remove-blacklist":
-            if args:
-                self.config_manager.remove_from_blacklist(args)
-                self.current_blacklist = self.config_manager.get_blacklist()
-                self.update_config_bar()
-                self.add_system_message(f"✓ Removed '{args}' from blacklist")
-            else:
-                self.add_system_message("✗ Usage: /remove-blacklist <command>")
-
-        elif cmd == "/allowlist":
-            if self.current_allowlist:
-                self.add_system_message(f"Allowlist: {', '.join(self.current_allowlist)}")
-            else:
-                self.add_system_message("Allowlist: None (all commands allowed)")
-
-        elif cmd == "/blacklist":
-            if self.current_blacklist:
-                self.add_system_message(f"Blacklist: {', '.join(self.current_blacklist)}")
-            else:
-                self.add_system_message("Blacklist: None")
-
-        elif cmd == "/clear":
-            self.messages = []
-            self.update_messages_display()
-            self.add_system_message("Message history cleared")
-
-        elif cmd == "/config":
+    def _get_display_path(self) -> str:
+        """Get display path for prompt."""
+        try:
+            home = Path.home()
             try:
-                settings = get_settings()
-                config_info = f"""
-**Configuration:**
-- Model: {settings.model}
-- API Key: {'✓ Set' if settings.api_key else '✗ Not Set'}
-- Config File: {self.config_manager.config_path}
-- Allowlist: {', '.join(self.current_allowlist) if self.current_allowlist else 'None'}
-- Blacklist: {', '.join(self.current_blacklist) if self.current_blacklist else 'None'}
-                """
-                self.add_system_message(config_info.strip())
-            except ValueError as e:
-                self.add_system_message(f"✗ Error loading config: {e}")
+                rel_path = self.current_dir.relative_to(home)
+                return f"~/{rel_path}" if str(rel_path) != "." else "~"
+            except ValueError:
+                return str(self.current_dir)
+        except Exception:
+            return str(self.current_dir)
 
-        else:
-            self.add_system_message(f"✗ Unknown command: {cmd}. Type /help for available commands.")
+    async def execute_command(self, cmd: str):
+        """Execute a bash command."""
+        global GLOBAL_CWD
 
-    async def action_clear_messages(self):
-        """Clear message history."""
-        self.messages = []
-        self.update_messages_display()
-        self.add_system_message("Message history cleared")
+        # Handle special built-in commands
+        if cmd == "clear" or cmd == "cls":
+            self.output_lines = []
+            self.update_terminal_display()
+            return
 
-    async def action_show_help(self):
-        """Show help message."""
-        await self.handle_command("/help")
+        if cmd.startswith("cd "):
+            new_path = cmd[3:].strip()
+            if not new_path:
+                new_path = str(Path.home())
+            try:
+                target = (self.current_dir / new_path).resolve()
+                if target.is_dir():
+                    self.current_dir = target
+                    os.chdir(str(self.current_dir))
+                    # Update global CWD in tools
+                    GLOBAL_CWD = str(self.current_dir)
+                else:
+                    self.add_output_line(f"cd: {new_path}: No such file or directory", "error-line")
+            except Exception as e:
+                self.add_output_line(f"cd: {str(e)}", "error-line")
+            return
 
-    async def action_select_all(self):
-        """Select all text in the input."""
-        input_widget = self.query_one("#prompt-input", Input)
-        input_widget.focus()
-        # Note: Input widget selection is handled by the terminal
+        # Execute command using subprocess
+        try:
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                shell=True,
+                cwd=str(self.current_dir),
+            )
+            stdout, stderr = process.communicate()
 
-    async def action_clear_input(self):
-        """Clear input field."""
-        input_widget = self.query_one("#prompt-input", Input)
-        input_widget.value = ""
-        self.history_index = -1
-        input_widget.focus()
+            # Log terminal output
+            log_terminal_output(
+                command=cmd,
+                stdout=stdout,
+                stderr=stderr,
+                exit_code=process.returncode,
+                cwd=str(self.current_dir),
+            )
 
-    async def action_clear_line(self):
-        """Clear current line (Ctrl+U)."""
-        input_widget = self.query_one("#prompt-input", Input)
-        input_widget.value = ""
-        self.history_index = -1
-        input_widget.focus()
+            # Display output
+            if stdout:
+                for line in stdout.rstrip().split("\n"):
+                    self.add_output_line(line, "output-line")
+            if stderr:
+                for line in stderr.rstrip().split("\n"):
+                    self.add_output_line(line, "error-line")
+
+            # Update directory if command changed it (e.g., cd in subshell)
+            try:
+                new_cwd = Path.cwd()
+                if new_cwd != self.current_dir:
+                    self.current_dir = new_cwd
+                    GLOBAL_CWD = str(self.current_dir)
+            except Exception:
+                pass
+
+        except Exception as e:
+            error_msg = f"Error executing command: {e}"
+            self.add_output_line(error_msg, "error-line")
+            log_terminal_error(command=cmd, error=str(e), cwd=str(self.current_dir))
+
+    async def handle_ai_request(self, prompt: str):
+        """Handle an AI assistance request."""
+        self.add_output_line("🤖 AI is thinking...", "ai-line")
+
+        # Get current allowlist/blacklist
+        allowlist = self.current_allowlist if self.current_allowlist else None
+        blacklist = self.current_blacklist if self.current_blacklist else None
+
+        # Log user request
+        log_conversation("user", prompt)
+
+        try:
+            # Run agent in background
+            response = await run_agent(
+                prompt,
+                allowed_commands=allowlist,
+                blacklisted_commands=blacklist,
+            )
+
+            # Remove thinking line and add response
+            if self.output_lines and self.output_lines[-1][0] == "🤖 AI is thinking...":
+                self.output_lines.pop()
+
+            # Display AI response
+            for line in response.split("\n"):
+                if line.strip():
+                    self.add_output_line(f"🤖 {line}", "ai-line")
+                else:
+                    self.add_output_line("", "ai-line")
+
+        except Exception as e:
+            # Remove thinking line
+            if self.output_lines and self.output_lines[-1][0] == "🤖 AI is thinking...":
+                self.output_lines.pop()
+            error_msg = f"❌ AI Error: {e}"
+            self.add_output_line(error_msg, "error-line")
 
     def on_key(self, event: Key) -> None:
-        """Handle keyboard events for command history and shortcuts."""
-        input_widget = self.query_one("#prompt-input", Input)
+        """Handle keyboard events."""
+        input_widget = self.query_one("#command-input", Input)
 
-        # Only handle keys when input is focused
         if not input_widget.has_focus:
             return
 
-        # Arrow up - previous command in history
+        # Arrow up - previous command
         if event.key == "up":
             if self.command_history:
                 if self.history_index == -1:
-                    # Save current input if starting to navigate history
                     current_value = input_widget.value
                     if current_value and current_value not in self.command_history:
                         self.command_history.append(current_value)
@@ -405,11 +376,10 @@ Just type your prompt normally (no prefix needed) to interact with the AI agent.
 
                 if 0 <= self.history_index < len(self.command_history):
                     input_widget.value = self.command_history[self.history_index]
-                    # Move cursor to end
                     input_widget.cursor_position = len(input_widget.value)
                 event.prevent_default()
 
-        # Arrow down - next command in history
+        # Arrow down - next command
         elif event.key == "down":
             if self.command_history and self.history_index >= 0:
                 if self.history_index < len(self.command_history) - 1:
@@ -417,100 +387,61 @@ Just type your prompt normally (no prefix needed) to interact with the AI agent.
                     input_widget.value = self.command_history[self.history_index]
                     input_widget.cursor_position = len(input_widget.value)
                 else:
-                    # Reached end of history, clear input
                     self.history_index = -1
                     input_widget.value = ""
                 event.prevent_default()
 
-        # Escape - Clear input
-        elif event.key == "escape":
-            input_widget.value = ""
-            self.history_index = -1
+        # Ctrl+L - Clear screen
+        elif event.key == "ctrl+l":
+            self.output_lines = []
+            self.update_terminal_display()
             event.prevent_default()
 
-        # Ctrl+K - Clear from cursor to end (Unix style)
-        elif event.key == "ctrl+k":
-            cursor_pos = input_widget.cursor_position
-            input_widget.value = input_widget.value[:cursor_pos]
-            input_widget.cursor_position = len(input_widget.value)
-            event.prevent_default()
+    async def action_clear_screen(self):
+        """Clear the terminal screen."""
+        self.output_lines = []
+        self.update_terminal_display()
 
-        # Ctrl+W - Delete word before cursor (Unix style)
-        elif event.key == "ctrl+w":
-            cursor_pos = input_widget.cursor_position
-            text = input_widget.value
-            # Find word boundary
-            i = cursor_pos - 1
-            while i >= 0 and text[i] == " ":
-                i -= 1
-            while i >= 0 and text[i] != " ":
-                i -= 1
-            new_text = text[: i + 1] + text[cursor_pos:]
-            input_widget.value = new_text
-            input_widget.cursor_position = i + 1
-            event.prevent_default()
+    async def action_ask_ai(self):
+        """Trigger AI assistance prompt."""
+        input_widget = self.query_one("#command-input", Input)
+        input_widget.value = f"{AI_PREFIX} "
+        input_widget.cursor_position = len(input_widget.value)
+        input_widget.focus()
 
-    async def send_prompt(self, prompt: str, stream: bool = True):
-        """Send the prompt to the agent (non-blocking)."""
-        # Get current allowlist/blacklist from config
-        allowlist = self.current_allowlist if self.current_allowlist else None
-        blacklist = self.current_blacklist if self.current_blacklist else None
+    async def action_help(self):
+        """Show help message."""
+        help_text = """
+bash.ai - AI-Enabled Terminal
 
-        # Show thinking indicator with animation
-        thinking_id = len(self.messages)
-        self.messages.append(
-            {"content": "[bold cyan]🤖 Agent is thinking[/bold cyan]", "type": "agent"}
-        )
-        self.update_messages_display()
-        self.start_thinking_animation(thinking_id)
+USAGE:
+  - Type commands directly to execute them (e.g., 'ls', 'pwd', 'git status')
+  - Use '?' prefix for AI assistance (e.g., '? explain git merge')
+  - Press Ctrl+A to start an AI prompt
 
-        try:
-            if stream:
-                # Streaming mode
-                response_text = ""
+KEYBOARD SHORTCUTS:
+  - ↑/↓        Navigate command history
+  - Ctrl+L     Clear screen
+  - Ctrl+A     Ask AI
+  - ?          Show this help
+  - Q/Ctrl+C   Quit
 
-                def stream_callback(text: str):
-                    nonlocal response_text
-                    response_text += text
-                    # Stop animation and update with actual response
-                    self.stop_thinking_animation()
-                    self.messages[thinking_id]["content"] = response_text
-                    self.update_messages_display()
+EXAMPLES:
+  $ ls -la
+  $ ? how do I check disk usage?
+  $ git status
+  $ ? explain the difference between merge and rebase
+        """
+        for line in help_text.strip().split("\n"):
+            self.add_output_line(line, "prompt-line")
 
-                response = await run_agent_live(
-                    prompt,
-                    allowed_commands=allowlist,
-                    blacklisted_commands=blacklist,
-                    stream_callback=stream_callback,
-                )
-                # Final update
-                self.stop_thinking_animation()
-                self.messages[thinking_id]["content"] = response
-            else:
-                # Standard mode
-                response = await run_agent(
-                    prompt,
-                    allowed_commands=allowlist,
-                    blacklisted_commands=blacklist,
-                )
-                self.stop_thinking_animation()
-                self.messages[thinking_id]["content"] = response
-
-            self.update_messages_display()
-        except Exception as e:
-            self.stop_thinking_animation()
-            self.messages[thinking_id]["content"] = f"[bold red]❌ Error:[/bold red] {e}"
-            self.update_messages_display()
-        finally:
-            # Re-focus input so user can continue typing
-            self.query_one("#prompt-input", Input).focus()
+    async def action_quit(self):
+        """Quit the application."""
+        log_session_end()
+        self.exit()
 
 
 def run_tui():
-    """Run the TUI application."""
-    try:
-        app = BashAIApp()
-        app.run()
-    finally:
-        # Log session end when TUI exits
-        log_session_end()
+    """Run the terminal TUI application."""
+    app = TerminalApp()
+    app.run()
