@@ -157,7 +157,7 @@ def format_prompt(cwd: Path):
 
 
 class BashCompleter(Completer):
-    """Custom completer for bash commands with path completion and git commands."""
+    """Custom completer for bash commands with context-aware completion."""
 
     def __init__(self):
         self.command_completer = FuzzyCompleter(WordCompleter(BASH_COMMANDS, ignore_case=True))
@@ -184,6 +184,10 @@ class BashCompleter(Completer):
             "remote",
             "fetch",
         ]
+        # Commands that take directory arguments
+        self.directory_commands = {"cd", "ls", "mkdir", "rmdir", "find", "grep"}
+        # Commands that take file arguments
+        self.file_commands = {"cat", "less", "more", "head", "tail", "grep", "rm", "mv", "cp"}
 
     def _get_git_completions(self, document, complete_event):
         """Get git subcommand completions."""
@@ -197,26 +201,68 @@ class BashCompleter(Completer):
                 if cmd.startswith(word):
                     yield Completion(cmd, start_position=-len(word), display=cmd)
 
+    def _is_command_complete(self, command: str) -> bool:
+        """Check if a command string is a complete known command."""
+        if not command:
+            return False
+        # Check if it's an exact match or ends with a space
+        return command.strip() in BASH_COMMANDS or command.endswith(" ")
+
     def get_completions(self, document, complete_event):
-        text = document.text_before_cursor
+        text_before = document.text_before_cursor
+        text = text_before.strip()
         parts = text.split()
 
-        # Check for git commands
+        # Handle git commands
         if parts and parts[0] == "git":
-            yield from self._get_git_completions(document, complete_event)
+            if len(parts) == 1:
+                # Just "git" - suggest git subcommands
+                yield from self._get_git_completions(document, complete_event)
+            elif len(parts) == 2:
+                # "git <subcommand>" - suggest git subcommands
+                yield from self._get_git_completions(document, complete_event)
+            else:
+                # "git <subcommand> <args>" - suggest paths/files
+                yield from self.path_completer.get_completions(document, complete_event)
             return
 
-        if not parts:
-            # No input yet, suggest commands
+        # Empty input - only show commands
+        if not text:
             yield from self.command_completer.get_completions(document, complete_event)
-        elif len(parts) == 1:
-            # First word - could be command or path
-            yield from self.command_completer.get_completions(document, complete_event)
-            # Also suggest paths
-            yield from self.path_completer.get_completions(document, complete_event)
-        else:
-            # After first word, suggest paths
-            yield from self.path_completer.get_completions(document, complete_event)
+            return
+
+        # Check if text ends with space (indicates command is complete and expecting argument)
+        ends_with_space = text_before.endswith(" ") or text_before.endswith("\t")
+
+        # Single word (potentially incomplete command)
+        if len(parts) == 1:
+            if ends_with_space:
+                # Command is complete (e.g., "cd "), show context-specific completions
+                command = parts[0].lower()
+                if command in self.directory_commands:
+                    yield from self.path_completer.get_completions(document, complete_event)
+                elif command in self.file_commands:
+                    yield from self.path_completer.get_completions(document, complete_event)
+                else:
+                    # Generic fallback - suggest paths
+                    yield from self.path_completer.get_completions(document, complete_event)
+            else:
+                # Incomplete command - only suggest commands
+                yield from self.command_completer.get_completions(document, complete_event)
+            return
+
+        # Multiple words - first word is the command, show context-specific completions
+        if len(parts) >= 2:
+            command = parts[0].lower()
+            # For directory commands, suggest directories
+            if command in self.directory_commands:
+                yield from self.path_completer.get_completions(document, complete_event)
+            # For file commands, suggest files and directories
+            elif command in self.file_commands:
+                yield from self.path_completer.get_completions(document, complete_event)
+            # For other commands, suggest paths (generic fallback)
+            else:
+                yield from self.path_completer.get_completions(document, complete_event)
 
 
 class TerminalApp:
