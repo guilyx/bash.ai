@@ -38,7 +38,7 @@ The `PluginManager` manages registered plugins and tries them in order when a co
 
 ### Step 1: Create Your Plugin Class
 
-Create a new file in `bash_ai/plugins/` (e.g., `my_plugin.py`):
+Create a new file in `flourish/plugins/` (e.g., `my_plugin.py`):
 
 ```python
 """My custom plugin for Flourish."""
@@ -85,7 +85,7 @@ class MyPlugin(Plugin):
 
 ### Step 2: Register Your Plugin
 
-Add your plugin to the plugin manager in `bash_ai/ui/tui.py`:
+Add your plugin to the plugin manager in `flourish/ui/tui.py`:
 
 ```python
 from ..plugins import PluginManager, ZshBindingsPlugin, MyPlugin
@@ -96,9 +96,11 @@ self.plugin_manager.register(ZshBindingsPlugin())
 self.plugin_manager.register(MyPlugin())  # Add your plugin
 ```
 
+**Note**: For completion plugins (like `CdCompleter`), registration is handled differently - they're integrated with the `prompt-toolkit` completion system. See the Completion Plugins section below.
+
 ### Step 3: Export Your Plugin
 
-Add your plugin to `bash_ai/plugins/__init__.py`:
+Add your plugin to `flourish/plugins/__init__.py`:
 
 ```python
 from .my_plugin import MyPlugin
@@ -137,6 +139,34 @@ class ZshBindingsPlugin(Plugin):
         # - cd ... (3+ dots) -> go back (dots - 1) directories
         ...
 ```
+
+## Completion Plugins
+
+Flourish also supports completion plugins that integrate with the `prompt-toolkit` completion system. These provide enhanced tab completion for specific commands.
+
+### Example: CdCompleter
+
+The `CdCompleter` provides enhanced directory completion for the `cd` command with nested directory support:
+
+```python
+from prompt_toolkit.completion import Completion, Completer
+
+class CdCompleter(Completer):
+    """Enhanced completer for cd command with nested directory structure support."""
+
+    def __init__(self, cwd: Path | None = None):
+        self.cwd = cwd or Path.cwd()
+
+    def get_completions(self, document, complete_event):
+        """Get completions for cd command with nested directory support."""
+        # Implementation provides:
+        # - Nested directory completion (e.g., "cd dev/proj" completes nested paths)
+        # - Support for absolute and relative paths
+        # - Home directory expansion (~)
+        ...
+```
+
+Completion plugins are registered differently from regular plugins - they're integrated directly with the `prompt-toolkit` completion system in the TUI. See `flourish/plugins/cd_completer.py` for the full implementation.
 
 ## Plugin Return Values
 
@@ -197,8 +227,8 @@ We welcome plugin contributions! To contribute a plugin:
 - [ ] Plugin follows the `Plugin` base class interface
 - [ ] `should_handle()` is specific and efficient
 - [ ] `execute()` handles errors gracefully
-- [ ] Plugin is registered in `bash_ai/ui/tui.py`
-- [ ] Plugin is exported in `bash_ai/plugins/__init__.py`
+- [ ] Plugin is registered in `flourish/ui/tui.py`
+- [ ] Plugin is exported in `flourish/plugins/__init__.py`
 - [ ] Documentation added/updated
 - [ ] Code follows project style (black, ruff)
 - [ ] No breaking changes to existing functionality
@@ -289,10 +319,10 @@ Command enhancers allow you to enrich command output without replacing command e
 
 ### Creating a Command Enhancer
 
-Create a new file in `bash_ai/plugins/` (e.g., `my_enhancer.py`):
+Create a new file in `flourish/plugins/` (e.g., `my_enhancer.py`):
 
 ```python
-from bash_ai.plugins.enhancers import CommandEnhancer
+from flourish.plugins.enhancers import CommandEnhancer
 from typing import Any
 
 class MyEnhancer(CommandEnhancer):
@@ -321,7 +351,7 @@ class MyEnhancer(CommandEnhancer):
 
 ### Registering an Enhancer
 
-Add your enhancer to `bash_ai/ui/tui.py`:
+Add your enhancer to `flourish/ui/tui.py`:
 
 ```python
 from ..plugins.enhancers import MyEnhancer
@@ -349,6 +379,18 @@ Adds color coding to `ls` output:
 Provides helpful hints when `cd` fails:
 - Suggests similar directory names when a directory doesn't exist
 - Helps with typos and partial matches
+
+### Built-in Completion Plugins
+
+Flourish includes built-in completion plugins:
+
+#### CdCompleter
+
+Enhanced completion for the `cd` command:
+- **Nested directory completion**: Supports paths like `cd dev/proj` with smart completion
+- **Absolute and relative paths**: Handles both `/path/to/dir` and `path/to/dir`
+- **Home directory expansion**: Supports `~` and `~/path/to/dir`
+- **Visual depth indicators**: Shows nested directory structure in completion menu
 
 ### Enhancer Return Values
 
@@ -395,10 +437,21 @@ class ColorfulOutputEnhancer(CommandEnhancer):
         }
 ```
 
+## Plugin Types Summary
+
+Flourish supports three types of plugins:
+
+1. **Command Handlers** (`Plugin`): Intercept and handle commands before standard execution
+2. **Command Enhancers** (`CommandEnhancer`): Enhance command output after execution
+3. **Completion Plugins** (`Completer`): Provide enhanced tab completion for commands
+
+Each type serves a different purpose and integrates with the system at different points in the command execution flow.
+
 ## Questions?
 
-- Check existing plugins in `bash_ai/plugins/` for examples
-- Check existing enhancers in `bash_ai/plugins/enhancers.py` for enhancement examples
+- Check existing plugins in `flourish/plugins/` for examples
+- Check existing enhancers in `flourish/plugins/enhancers.py` for enhancement examples
+- Check `flourish/plugins/cd_completer.py` for completion plugin examples
 - Open a [Discussion](https://github.com/made-after-dark/flourish/discussions) for questions
 - Review [CONTRIBUTING.md](../CONTRIBUTING.md) for general contribution guidelines
 
