@@ -35,6 +35,7 @@ from ..logging import (
     log_terminal_error,
     log_terminal_output,
 )
+from ..plugins import PluginManager, ZshBindingsPlugin
 from ..runner import run_agent
 from ..tools.tools import GLOBAL_CWD, set_allowlist_blacklist
 
@@ -239,6 +240,10 @@ class TerminalApp:
         # Initialize session log
         initialize_session_log()
 
+        # Setup plugin system
+        self.plugin_manager = PluginManager()
+        self.plugin_manager.register(ZshBindingsPlugin())
+
         # Setup prompt_toolkit
         self.completer = BashCompleter()
         self.history = InMemoryHistory()
@@ -301,6 +306,21 @@ class TerminalApp:
             print("\033[2J\033[H", end="")
             return
 
+        # Try plugins first
+        plugin_result = await self.plugin_manager.execute(cmd, str(self.current_dir))
+        if plugin_result and plugin_result.get("handled", False):
+            # Plugin handled the command
+            if plugin_result.get("error"):
+                print(f"\033[91m{plugin_result['error']}\033[0m", file=__import__("sys").stderr)
+            if plugin_result.get("output"):
+                print(plugin_result["output"], end="")
+            # Update directory if plugin changed it
+            if "new_cwd" in plugin_result:
+                self.current_dir = Path(plugin_result["new_cwd"])
+                GLOBAL_CWD = str(self.current_dir)
+            return
+
+        # Handle cd command (standard behavior)
         if cmd.startswith("cd "):
             new_path = cmd[3:].strip()
             if not new_path:
@@ -362,15 +382,15 @@ class TerminalApp:
         """Format AI response with proper code block rendering."""
         # Check if response contains code blocks
         code_block_pattern = r"```(\w+)?\n?(.*?)```"
-        
+
         # Find all code blocks
         matches = list(re.finditer(code_block_pattern, response, re.DOTALL))
-        
+
         if not matches:
             # No code blocks, just print as markdown
             self.console.print(Markdown(response))
             return
-        
+
         # Process response with code blocks
         last_end = 0
         for match in matches:
@@ -379,11 +399,11 @@ class TerminalApp:
                 text_before = response[last_end:match.start()].strip()
                 if text_before:
                     self.console.print(Markdown(text_before))
-            
+
             # Extract language and code
             language = match.group(1) or "text"
             code = match.group(2).strip()
-            
+
             # Print code block with syntax highlighting
             # Use a terminal-friendly theme
             syntax = Syntax(
@@ -394,9 +414,9 @@ class TerminalApp:
                 word_wrap=True,
             )
             self.console.print(syntax)
-            
+
             last_end = match.end()
-        
+
         # Print remaining text after last code block
         if last_end < len(response):
             text_after = response[last_end:].strip()
