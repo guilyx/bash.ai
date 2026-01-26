@@ -29,7 +29,8 @@
     "mkdir",
     "nc",
     "nmap",
-    "telnet"
+    "telnet",
+    "git"
   ],
   "blacklist": [
     "rm",
