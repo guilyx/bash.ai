@@ -274,11 +274,17 @@ bash.ai/
 │   ├── agent/            # Agent definitions and logic
 │   ├── config/           # Configuration management
 │   ├── logging/          # Logging utilities
+│   ├── plugins/          # Plugin system for extending capabilities
+│   │   ├── base.py       # Plugin base classes
+│   │   └── zsh_bindings.py  # Example: zsh-like bindings
 │   ├── runner/           # Agent execution logic
 │   ├── tools/            # Custom tools for bash execution
 │   └── ui/               # Text User Interface (TUI) and CLI
 ├── config/               # Persistent configuration files (e.g., commands.json)
-├── docs/                 # Project documentation (architecture, libraries, etc.)
+├── docs/                 # Project documentation
+│   ├── architecture.md   # System architecture
+│   ├── plugins.md        # Plugin system guide
+│   └── third-party-libraries.md
 ├── tests/                # Unit and integration tests
 ├── .env.example          # Example environment variables
 ├── pyproject.toml        # Project metadata and build configuration
@@ -288,6 +294,24 @@ bash.ai/
 ├── SECURITY.md           # Security policy
 └── LICENSE               # License file
 ```
+
+## Extending bash.ai
+
+### Plugin System
+
+bash.ai includes a powerful plugin system that allows you to add custom commands, aliases, and behaviors. Create plugins to:
+
+- Add command aliases (e.g., `ll` -> `ls -la`)
+- Implement zsh-like features (e.g., `cd ...` to go back directories)
+- Add custom shortcuts and workflows
+- Extend terminal capabilities
+
+See [docs/plugins.md](docs/plugins.md) for detailed documentation on creating plugins.
+
+**Example**: The `ZshBindingsPlugin` adds zsh-like behaviors:
+- `cd` (alone) → goes to home directory
+- `cd ...` → goes back 2 directories
+- `cd ....` → goes back 3 directories
 
 ## Security Considerations
 

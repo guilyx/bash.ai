@@ -125,13 +125,51 @@ By participating in this project, you agree to maintain a respectful and inclusi
 bash.ai/
 ├── bash_ai/              # Main package
 │   ├── __init__.py
-│   ├── config.py         # Configuration
-│   ├── agents.py         # Agent definitions
-│   ├── runner.py         # Agent execution
-│   └── cli.py            # CLI interface
+│   ├── agent/            # Agent definitions
+│   ├── config/           # Configuration management
+│   ├── logging/          # Logging utilities
+│   ├── plugins/          # Plugin system
+│   │   ├── base.py       # Plugin base classes
+│   │   ├── zsh_bindings.py  # Example plugin
+│   │   └── __init__.py
+│   ├── runner/           # Agent execution
+│   ├── tools/            # Agent tools
+│   └── ui/               # User interfaces (TUI, CLI)
+├── config/               # Configuration files
+├── docs/                 # Documentation
+│   ├── architecture.md
+│   ├── plugins.md        # Plugin system guide
+│   └── ...
 ├── tests/                # Test files
 └── ...
 ```
+
+## Extending bash.ai with Plugins
+
+bash.ai has a powerful plugin system that allows you to add custom commands, aliases, and behaviors. See [docs/plugins.md](docs/plugins.md) for detailed information on creating plugins.
+
+### Quick Plugin Example
+
+```python
+from bash_ai.plugins import Plugin
+from typing import Any
+
+class MyPlugin(Plugin):
+    def name(self) -> str:
+        return "my_plugin"
+    
+    def should_handle(self, command: str) -> bool:
+        return command.startswith("mycommand")
+    
+    async def execute(self, command: str, cwd: str) -> dict[str, Any]:
+        return {
+            "handled": True,
+            "output": "Plugin executed!",
+            "exit_code": 0,
+        }
+```
+
+For more details, see the [Plugin System Documentation](docs/plugins.md).
 
 ## Review Process
 
