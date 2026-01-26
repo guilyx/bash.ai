@@ -36,6 +36,7 @@ from ..logging import (
     log_terminal_output,
 )
 from ..plugins import PluginManager, ZshBindingsPlugin
+from ..plugins.cd_completer import CdCompleter
 from ..plugins.enhancers import EnhancerManager, LsColorEnhancer, CdEnhancementPlugin
 from ..runner import run_agent
 from ..tools.tools import GLOBAL_CWD, set_allowlist_blacklist
@@ -160,9 +161,16 @@ def format_prompt(cwd: Path):
 class BashCompleter(Completer):
     """Custom completer for bash commands with context-aware completion."""
 
-    def __init__(self):
+    def __init__(self, cwd: Path | None = None):
+        """Initialize the bash completer.
+
+        Args:
+            cwd: Current working directory for path completions.
+        """
+        self.cwd = cwd or Path.cwd()
         self.command_completer = FuzzyCompleter(WordCompleter(BASH_COMMANDS, ignore_case=True))
         self.path_completer = PathCompleter()
+        self.cd_completer = CdCompleter(cwd=self.cwd)
         # Git subcommands
         self.git_commands = [
             "add",
@@ -240,7 +248,12 @@ class BashCompleter(Completer):
             if ends_with_space:
                 # Command is complete (e.g., "cd "), show context-specific completions
                 command = parts[0].lower()
-                if command in self.directory_commands:
+                # Special handling for cd - use enhanced completer with nested directory support
+                if command == "cd":
+                    # Update cd completer's current directory
+                    self.cd_completer.cwd = self.cwd
+                    yield from self.cd_completer.get_completions(document, complete_event)
+                elif command in self.directory_commands:
                     yield from self.path_completer.get_completions(document, complete_event)
                 elif command in self.file_commands:
                     yield from self.path_completer.get_completions(document, complete_event)
@@ -255,8 +268,13 @@ class BashCompleter(Completer):
         # Multiple words - first word is the command, show context-specific completions
         if len(parts) >= 2:
             command = parts[0].lower()
-            # For directory commands, suggest directories
-            if command in self.directory_commands:
+            # Special handling for cd - use enhanced completer with nested directory support
+            if command == "cd":
+                # Update cd completer's current directory
+                self.cd_completer.cwd = self.cwd
+                yield from self.cd_completer.get_completions(document, complete_event)
+            # For other directory commands, suggest directories
+            elif command in self.directory_commands:
                 yield from self.path_completer.get_completions(document, complete_event)
             # For file commands, suggest files and directories
             elif command in self.file_commands:
@@ -297,7 +315,7 @@ class TerminalApp:
         self.enhancer_manager.register(CdEnhancementPlugin())
 
         # Setup prompt_toolkit
-        self.completer = BashCompleter()
+        self.completer = BashCompleter(cwd=self.current_dir)
         self.history = InMemoryHistory()
 
         # Try to load history from file
@@ -370,6 +388,9 @@ class TerminalApp:
             if "new_cwd" in plugin_result:
                 self.current_dir = Path(plugin_result["new_cwd"])
                 GLOBAL_CWD = str(self.current_dir)
+                # Update completer's current directory
+                self.completer.cwd = self.current_dir
+                self.completer.cd_completer.cwd = self.current_dir
             return
 
         # Handle cd command (standard behavior)
@@ -383,6 +404,9 @@ class TerminalApp:
                     self.current_dir = target
                     os.chdir(str(self.current_dir))
                     GLOBAL_CWD = str(self.current_dir)
+                    # Update completer's current directory
+                    self.completer.cwd = self.current_dir
+                    self.completer.cd_completer.cwd = self.current_dir
                 else:
                     print(f"\033[91mcd: {new_path}: No such file or directory\033[0m")
             except Exception as e:
@@ -431,6 +455,9 @@ class TerminalApp:
                 if new_cwd != self.current_dir:
                     self.current_dir = new_cwd
                     GLOBAL_CWD = str(self.current_dir)
+                    # Update completer's current directory
+                    self.completer.cwd = self.current_dir
+                    self.completer.cd_completer.cwd = self.current_dir
             except Exception:
                 pass
 

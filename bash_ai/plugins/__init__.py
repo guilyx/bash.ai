@@ -1,6 +1,7 @@
 """Plugin system for bash.ai."""
 
 from .base import Plugin, PluginManager
+from .cd_completer import CdCompleter
 from .enhancers import (
     CdEnhancementPlugin,
     CommandEnhancer,
@@ -17,4 +18,5 @@ __all__ = [
     "EnhancerManager",
     "LsColorEnhancer",
     "CdEnhancementPlugin",
+    "CdCompleter",
 ]
