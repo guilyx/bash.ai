@@ -1,8 +1,9 @@
 """Tests for tools module."""
 
 import os
+import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -27,14 +28,55 @@ from flourish.tools import (
 
 
 @pytest.fixture
+def temp_config_file(tmp_path):
+    """Create a temporary config file for tests."""
+    config_file = tmp_path / "commands.json"
+    # Write default config
+    import json
+
+    config_file.write_text(
+        json.dumps({"allowlist": [], "blacklist": ["rm", "dd", "format", "mkfs"]}, indent=2)
+    )
+    return str(config_file)
+
+
+@pytest.fixture
+def mock_config_manager(temp_config_file):
+    """Mock ConfigManager to use temporary config file."""
+    with patch("flourish.config.config_manager.ConfigManager") as mock_class:
+        from flourish.config.config_manager import ConfigManager
+
+        # Create a real ConfigManager with temp file
+        def create_manager(*args, **kwargs):
+            return ConfigManager(config_file=temp_config_file)
+
+        mock_class.side_effect = create_manager
+        yield mock_class
+
+
+@pytest.fixture
+def mock_bash_config_manager(temp_config_file):
+    """Mock ConfigManager in bash tools to use temporary config file."""
+    with patch("flourish.config.config_manager.ConfigManager") as mock_class:
+        from flourish.config.config_manager import ConfigManager
+
+        # Create a real ConfigManager with temp file
+        def create_manager(*args, **kwargs):
+            return ConfigManager(config_file=temp_config_file)
+
+        mock_class.side_effect = create_manager
+        yield mock_class
+
+
+@pytest.fixture
 def reset_globals():
     """Reset global variables before each test."""
+    import flourish.tools.globals as globals_module
     from flourish.tools.globals import (
         GLOBAL_ALLOWLIST,
         GLOBAL_BLACKLIST,
         GLOBAL_CWD,
     )
-    import flourish.tools.globals as globals_module
 
     # Save original values
     original_allowlist = GLOBAL_ALLOWLIST
@@ -102,7 +144,7 @@ def test_execute_bash_blacklisted(reset_globals):
     assert "blacklisted" in result["message"].lower()
 
 
-def test_execute_bash_not_in_allowlist(reset_globals):
+def test_execute_bash_not_in_allowlist(reset_globals, mock_bash_config_manager):
     """Test that commands not in allowlist are still executed (auto-added)."""
     set_allowlist_blacklist(allowlist=["ls"], blacklist=None)
     result = execute_bash("echo test", tool_context=None)
@@ -110,7 +152,7 @@ def test_execute_bash_not_in_allowlist(reset_globals):
     assert result["status"] == "success"
 
 
-def test_add_to_allowlist(reset_globals):
+def test_add_to_allowlist(reset_globals, mock_config_manager):
     """Test adding command to allowlist."""
     set_allowlist_blacklist(allowlist=[], blacklist=None)
     result = add_to_allowlist("ls", tool_context=None)
@@ -120,7 +162,7 @@ def test_add_to_allowlist(reset_globals):
     assert "ls" in globals_module.GLOBAL_ALLOWLIST
 
 
-def test_add_to_blacklist(reset_globals):
+def test_add_to_blacklist(reset_globals, mock_config_manager):
     """Test adding command to blacklist."""
     set_allowlist_blacklist(allowlist=None, blacklist=[])
     result = add_to_blacklist("rm", tool_context=None)
@@ -130,7 +172,7 @@ def test_add_to_blacklist(reset_globals):
     assert "rm" in globals_module.GLOBAL_BLACKLIST
 
 
-def test_remove_from_allowlist(reset_globals):
+def test_remove_from_allowlist(reset_globals, mock_config_manager):
     """Test removing command from allowlist."""
     set_allowlist_blacklist(allowlist=["ls"], blacklist=None)
     result = remove_from_allowlist("ls", tool_context=None)
@@ -140,7 +182,7 @@ def test_remove_from_allowlist(reset_globals):
     assert "ls" not in globals_module.GLOBAL_ALLOWLIST
 
 
-def test_remove_from_blacklist(reset_globals):
+def test_remove_from_blacklist(reset_globals, mock_config_manager):
     """Test removing command from blacklist."""
     set_allowlist_blacklist(allowlist=None, blacklist=["rm"])
     result = remove_from_blacklist("rm", tool_context=None)
@@ -416,15 +458,27 @@ def test_read_conversation_history_finds_most_recent(tmp_path, monkeypatch):
     # Create two session directories
     old_session = logs_dir / "session_2025-01-26_09-00-00"
     old_session.mkdir(parents=True, exist_ok=True)
-    (old_session / "conversation.log").write_text(
+    old_log = old_session / "conversation.log"
+    old_log.write_text(
         '2025-01-26 09:00:00 - flourish.conversation - INFO - {"event":"conversation","role":"user","content":"Old message"}\n'
     )
+    # Ensure old session has older mtime
+    old_time = time.time() - 100
+    old_log.touch()
+    os.utime(old_log, (old_time, old_time))
+    os.utime(old_session, (old_time, old_time))
 
     new_session = logs_dir / "session_2025-01-26_10-00-00"
     new_session.mkdir(parents=True, exist_ok=True)
-    (new_session / "conversation.log").write_text(
+    new_log = new_session / "conversation.log"
+    new_log.write_text(
         '2025-01-26 10:00:00 - flourish.conversation - INFO - {"event":"conversation","role":"user","content":"New message"}\n'
     )
+    # Ensure new session has newer mtime
+    new_time = time.time()
+    new_log.touch()
+    os.utime(new_log, (new_time, new_time))
+    os.utime(new_session, (new_time, new_time))
 
     monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
 
