@@ -36,10 +36,12 @@ class CdCompleter(Completer):
             # If pattern is empty, return all immediate subdirectories
             if not pattern:
                 try:
+                    if not base_path.exists() or not base_path.is_dir():
+                        return directories
                     for item in base_path.iterdir():
                         if item.is_dir() and not item.name.startswith("."):
                             directories.append(item)
-                except PermissionError:
+                except (PermissionError, OSError):
                     pass
                 return sorted(directories, key=lambda p: p.name.lower())
 
@@ -131,11 +133,19 @@ class CdCompleter(Completer):
         text_before = document.text_before_cursor
         text = text_before.strip()
 
-        # Extract the path part after "cd "
-        if not text.startswith("cd "):
+        # Extract the path part after "cd " or "cd"
+        if not text.startswith("cd"):
             return
 
-        path_part = text[3:].strip()
+        # Handle both "cd " and "cd" (without space)
+        if text.startswith("cd "):
+            path_part = text[3:].strip()
+        elif text == "cd":
+            # Just "cd" - show all directories
+            path_part = ""
+        else:
+            # "cd" followed by something (like "cddev")
+            return
 
         # Determine base path
         if path_part.startswith("/"):
@@ -167,12 +177,12 @@ class CdCompleter(Completer):
         else:
             start_position = 0
 
-        # Yield completions
+        # Yield completions - use default style which will be styled by prompt_toolkit
         for directory in directories:
             completion_text, display_text = self._format_completion(directory, base_path, search_pattern)
+            # Don't set style - let prompt_toolkit use its default completion menu styling
             yield Completion(
                 completion_text,
                 start_position=start_position,
                 display=display_text,
-                style="fg:cyan bold" if directory.is_dir() else "fg:white",
             )
