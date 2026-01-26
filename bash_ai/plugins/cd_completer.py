@@ -155,19 +155,13 @@ class CdCompleter(Completer):
         directories = self._get_directories(base_path, search_pattern)
 
         # Calculate start position for completion
-        # Find where the last part of the pattern starts
-        if "/" in search_pattern:
-            last_slash_pos = search_pattern.rfind("/")
-            pattern_start = last_slash_pos + 1
-        else:
-            pattern_start = 0
-
-        # Calculate the actual start position in the document
-        # We need to find where the pattern starts in the full text
+        # We need to find where the last part of the path starts
         if path_part:
             if "/" in path_part:
-                last_slash_in_path = path_part.rfind("/")
-                start_position = -(len(path_part) - last_slash_in_path - 1)
+                # Find the last part after the last slash
+                last_slash_pos = path_part.rfind("/")
+                last_part = path_part[last_slash_pos + 1 :]
+                start_position = -len(last_part) if last_part else 0
             else:
                 start_position = -len(path_part)
         else:
