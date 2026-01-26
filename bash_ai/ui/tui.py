@@ -36,6 +36,7 @@ from ..logging import (
     log_terminal_output,
 )
 from ..plugins import PluginManager, ZshBindingsPlugin
+from ..plugins.enhancers import EnhancerManager, LsColorEnhancer, CdEnhancementPlugin
 from ..runner import run_agent
 from ..tools.tools import GLOBAL_CWD, set_allowlist_blacklist
 
@@ -290,6 +291,11 @@ class TerminalApp:
         self.plugin_manager = PluginManager()
         self.plugin_manager.register(ZshBindingsPlugin())
 
+        # Setup command enhancer system
+        self.enhancer_manager = EnhancerManager()
+        self.enhancer_manager.register(LsColorEnhancer())
+        self.enhancer_manager.register(CdEnhancementPlugin())
+
         # Setup prompt_toolkit
         self.completer = BashCompleter()
         self.history = InMemoryHistory()
@@ -395,7 +401,12 @@ class TerminalApp:
             )
             stdout, stderr = process.communicate()
 
-            # Log terminal output
+            # Apply command enhancers
+            enhanced = self.enhancer_manager.enhance(
+                cmd, stdout, stderr, process.returncode, str(self.current_dir)
+            )
+
+            # Log terminal output (original, not enhanced)
             log_terminal_output(
                 command=cmd,
                 stdout=stdout,
@@ -404,11 +415,15 @@ class TerminalApp:
                 cwd=str(self.current_dir),
             )
 
-            # Display output directly to terminal
-            if stdout:
-                print(stdout, end="")
-            if stderr:
-                print(stderr, end="", file=__import__("sys").stderr)
+            # Display enhanced output
+            if enhanced["stdout"]:
+                print(enhanced["stdout"], end="")
+            if enhanced["stderr"]:
+                print(enhanced["stderr"], end="", file=__import__("sys").stderr)
+            # Display hints if any
+            if enhanced.get("hints"):
+                for hint in enhanced["hints"]:
+                    print(f"\033[33m💡 {hint}\033[0m")
 
             # Update directory if command changed it
             try:
