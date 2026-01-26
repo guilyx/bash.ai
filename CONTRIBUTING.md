@@ -63,7 +63,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
    ```bash
    uv run ruff check .
    uv run black --check .
-   uv run mypy bash_ai
+   uv run mypy flourish
    uv run pytest
    ```
 
@@ -123,13 +123,16 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ```
 flourish/
-├── bash_ai/              # Main package
+├── flourish/              # Main package
 │   ├── __init__.py
 │   ├── agent/            # Agent definitions
+│   ├── completions/      # Command completion system
 │   ├── config/           # Configuration management
 │   ├── logging/          # Logging utilities
 │   ├── plugins/          # Plugin system
 │   │   ├── base.py       # Plugin base classes
+│   │   ├── cd_completer.py  # Enhanced cd completion
+│   │   ├── enhancers.py  # Command output enhancers
 │   │   ├── zsh_bindings.py  # Example plugin
 │   │   └── __init__.py
 │   ├── runner/           # Agent execution
@@ -151,7 +154,7 @@ Flourish has a powerful plugin system that allows you to add custom commands, al
 ### Quick Plugin Example
 
 ```python
-from bash_ai.plugins import Plugin
+from flourish.plugins import Plugin
 from typing import Any
 
 class MyPlugin(Plugin):
@@ -184,4 +187,4 @@ For more details, see the [Plugin System Documentation](docs/plugins.md).
 - Check existing [Issues](https://github.com/made-after-dark/flourish/issues)
 - Reach out to maintainers
 
-Thank you for contributing to bash.ai! 🚀
+Thank you for contributing to flourish! 🚀
