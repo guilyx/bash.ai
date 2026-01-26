@@ -33,7 +33,9 @@ class CommandEnhancer(ABC):
         pass
 
     @abstractmethod
-    def enhance_output(self, command: str, stdout: str, stderr: str, exit_code: int, cwd: str) -> dict[str, Any]:
+    def enhance_output(
+        self, command: str, stdout: str, stderr: str, exit_code: int, cwd: str
+    ) -> dict[str, Any]:
         """Enhance command output.
 
         Args:
@@ -120,7 +122,9 @@ class LsColorEnhancer(CommandEnhancer):
         except Exception:
             return self.RESET
 
-    def enhance_output(self, command: str, stdout: str, stderr: str, exit_code: int, cwd: str) -> dict[str, Any]:
+    def enhance_output(
+        self, command: str, stdout: str, stderr: str, exit_code: int, cwd: str
+    ) -> dict[str, Any]:
         """Add colors to ls output."""
         if exit_code != 0 or stderr:
             # Don't enhance if there's an error
@@ -205,7 +209,9 @@ class CdEnhancementPlugin(CommandEnhancer):
         """Check if this enhancer should enhance cd commands."""
         return command.strip().startswith("cd ")
 
-    def enhance_output(self, command: str, stdout: str, stderr: str, exit_code: int, cwd: str) -> dict[str, Any]:
+    def enhance_output(
+        self, command: str, stdout: str, stderr: str, exit_code: int, cwd: str
+    ) -> dict[str, Any]:
         """Provide hints for cd command."""
         hints = []
 
@@ -220,7 +226,9 @@ class CdEnhancementPlugin(CommandEnhancer):
                         try:
                             dirs = [d for d in current.iterdir() if d.is_dir()]
                             # Find directories that start with the target
-                            matches = [d.name for d in dirs if d.name.lower().startswith(target.lower())]
+                            matches = [
+                                d.name for d in dirs if d.name.lower().startswith(target.lower())
+                            ]
                             if matches:
                                 hints.append(f"Did you mean: {', '.join(matches[:5])}?")
                         except PermissionError:
@@ -250,7 +258,9 @@ class EnhancerManager:
         """
         self.enhancers.append(enhancer)
 
-    def enhance(self, command: str, stdout: str, stderr: str, exit_code: int, cwd: str) -> dict[str, Any]:
+    def enhance(
+        self, command: str, stdout: str, stderr: str, exit_code: int, cwd: str
+    ) -> dict[str, Any]:
         """Apply all relevant enhancers to command output.
 
         Args:
@@ -269,7 +279,9 @@ class EnhancerManager:
 
         for enhancer in self.enhancers:
             if enhancer.should_enhance(command):
-                result = enhancer.enhance_output(command, enhanced_stdout, enhanced_stderr, exit_code, cwd)
+                result = enhancer.enhance_output(
+                    command, enhanced_stdout, enhanced_stderr, exit_code, cwd
+                )
                 if result.get("enhanced", False):
                     enhanced_stdout = result.get("stdout", enhanced_stdout)
                     enhanced_stderr = result.get("stderr", enhanced_stderr)

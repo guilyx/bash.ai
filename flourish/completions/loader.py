@@ -66,7 +66,9 @@ class CompletionLoader:
                     if callable(completion_func):
                         # Wrap the function to match our interface
                         def make_wrapper(cmd: str, func: Any) -> Any:
-                            def wrapper(current_word: str, words: list[str], word_index: int) -> list[Completion]:
+                            def wrapper(
+                                current_word: str, words: list[str], word_index: int
+                            ) -> list[Completion]:
                                 """Wrapper to convert completion function results."""
                                 try:
                                     # Call the completion function

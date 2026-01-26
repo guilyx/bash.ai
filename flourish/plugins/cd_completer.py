@@ -110,7 +110,9 @@ class CdCompleter(Completer):
                     start_idx = len(pattern_parts) - 1
                     if start_idx < len(rel_parts):
                         remaining_parts = rel_parts[start_idx:]
-                        completion_text = "/".join(remaining_parts) if remaining_parts else path.name
+                        completion_text = (
+                            "/".join(remaining_parts) if remaining_parts else path.name
+                        )
                     else:
                         completion_text = path.name
                 else:
@@ -179,7 +181,9 @@ class CdCompleter(Completer):
 
         # Yield completions - use default style which will be styled by prompt_toolkit
         for directory in directories:
-            completion_text, display_text = self._format_completion(directory, base_path, search_pattern)
+            completion_text, display_text = self._format_completion(
+                directory, base_path, search_pattern
+            )
             # Don't set style - let prompt_toolkit use its default completion menu styling
             yield Completion(
                 completion_text,

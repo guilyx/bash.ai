@@ -79,7 +79,7 @@ def test_completion_registry_register_alias():
 
     registry.register("test", complete_test, "Test")
     registry.register_alias("t", "test")
-    
+
     completion = registry.get_completion("t")
     assert completion is not None
     assert completion.func == complete_test
@@ -111,10 +111,10 @@ def test_completion_loader_load_from_directory_valid(tmp_path):
     # Create a completion script
     completion_file = tmp_path / "test.py"
     completion_file.write_text(
-        '''
+        """
 def complete_test(current_word: str, words: list[str], word_index: int):
     return ["test1", "test2"]
-'''
+"""
     )
 
     loader = CompletionLoader()

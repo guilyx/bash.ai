@@ -115,9 +115,7 @@ def test_ls_color_enhancer_should_enhance():
 def test_ls_color_enhancer_enhance_output(tmp_path):
     """Test LsColorEnhancer enhance_output."""
     enhancer = LsColorEnhancer()
-    result = enhancer.enhance_output(
-        "ls", "file1.txt\ndir1", "", 0, str(tmp_path)
-    )
+    result = enhancer.enhance_output("ls", "file1.txt\ndir1", "", 0, str(tmp_path))
     assert result["enhanced"] is True
     assert "stdout" in result
 
@@ -138,9 +136,7 @@ def test_cd_enhancement_plugin_should_enhance():
 def test_cd_enhancement_plugin_enhance_output(tmp_path):
     """Test CdEnhancementPlugin enhance_output."""
     plugin = CdEnhancementPlugin()
-    result = plugin.enhance_output(
-        "cd nonexistent", "", "No such file", 1, str(tmp_path)
-    )
+    result = plugin.enhance_output("cd nonexistent", "", "No such file", 1, str(tmp_path))
     assert "hints" in result
 
 

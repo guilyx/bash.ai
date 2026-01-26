@@ -16,6 +16,7 @@ FLOURISH_BANNER = """
 ╚════════════════════════════════════════════════════════════════════════╝
 """
 
+
 def animate_banner(speed=0.03):
     """Prints the banner with a vertical scanline effect."""
     cyan = "\033[36m"
@@ -30,8 +31,10 @@ def animate_banner(speed=0.03):
         time.sleep(speed)
     print()
 
+
 def print_banner():
     animate_banner()
+
 
 if __name__ == "__main__":
     animate_banner()
