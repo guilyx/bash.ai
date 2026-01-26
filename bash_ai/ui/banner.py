@@ -1,4 +1,5 @@
-"""ASCII art banner for FLOURISh."""
+import sys
+import time
 
 FLOURISH_BANNER = """
 ╔════════════════════════════════════════════════════════════════════════╗
@@ -15,13 +16,22 @@ FLOURISH_BANNER = """
 ╚════════════════════════════════════════════════════════════════════════╝
 """
 
-def print_banner():
-    """Print the FLOURISh banner with colors."""
-    # Use cyan (\033[36m) for a modern terminal look
+def animate_banner(speed=0.03):
+    """Prints the banner with a vertical scanline effect."""
+    cyan = "\033[36m"
+    reset = "\033[0m"
+
     lines = FLOURISH_BANNER.strip().split("\n")
+
     for line in lines:
-        print("\033[36m" + line + "\033[0m")
+        # Print line with cyan color
+        sys.stdout.write(cyan + line + reset + "\n")
+        sys.stdout.flush()
+        time.sleep(speed)
     print()
 
+def print_banner():
+    animate_banner()
+
 if __name__ == "__main__":
-    print_banner()
+    animate_banner()

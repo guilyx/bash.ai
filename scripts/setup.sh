@@ -58,14 +58,14 @@ echo "📦 Installing dependencies..."
 uv sync
 
 # Install the package
-echo "🔨 Installing bash-ai..."
+echo "🔨 Installing Flourish..."
 uv pip install -e .
 
 if command -v flourish &> /dev/null; then
     echo "✅ Setup successful! Flourish is ready to use."
     echo ""
     echo "Next steps:"
-    echo "1. Edit .env and add your GOOGLE_API_KEY"
+    echo "1. Edit .env and add your API_KEY"
     echo "2. Try it out: flourish 'Hello, world!'"
     echo ""
     echo "To integrate with bash:"

@@ -1,8 +1,8 @@
-# Architecture of bash.ai
+# Architecture of Flourish
 
 ## Overview
 
-`bash.ai` is an AI-powered bash environment enhancement tool designed to provide an intelligent assistant directly within the terminal. It leverages Large Language Models (LLMs) to understand user requests, execute bash commands, and manage a secure environment through allowlists and blacklists. The architecture is modular, allowing for easy extension and integration with various LLM providers via LiteLLM.
+Flourish is an AI-powered terminal environment enhancement tool designed to provide an intelligent assistant directly within the terminal. It leverages Large Language Models (LLMs) to understand user requests, execute bash commands, and manage a secure environment through allowlists and blacklists. The architecture is modular, allowing for easy extension and integration with various LLM providers via LiteLLM.
 
 ## Core Components
 

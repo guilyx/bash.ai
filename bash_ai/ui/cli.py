@@ -51,11 +51,11 @@ def agent_command(prompt: str, allowlist: str | None, blacklist: str | None, str
     """Run agent in CLI mode (non-interactive).
 
     Example:
-        bash-ai agent "What is the difference between git merge and rebase?"
-        bash-ai agent "List all files in the current directory"
-        bash-ai agent -a "ls,cd,git" "Check git status"
-        bash-ai agent -b "rm,dd" "Help me organize files"
-        bash-ai agent --stream "Explain Docker containers"  # Live streaming output
+        flourish agent "What is the difference between git merge and rebase?"
+        flourish agent "List all files in the current directory"
+        flourish agent -a "ls,cd,git" "Check git status"
+        flourish agent -b "rm,dd" "Help me organize files"
+        flourish agent --stream "Explain Docker containers"  # Live streaming output
     """
     try:
         # Parse allowlist and blacklist
