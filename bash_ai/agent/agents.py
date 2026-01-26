@@ -4,6 +4,8 @@ import os
 
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
+from google.genai import types
+from google.adk.planners import BuiltInPlanner
 
 from ..config import get_settings
 from ..tools import get_bash_tools
@@ -52,6 +54,9 @@ def get_agent(
     """
     settings = get_settings()
 
+    # Suppress Gemini via LiteLLM warning
+    os.environ.setdefault("ADK_SUPPRESS_GEMINI_LITELLM_WARNINGS", "true")
+
     # Set API key for LiteLLM
     if settings.api_key:
         os.environ.setdefault("OPENAI_API_KEY", settings.api_key)
@@ -80,6 +85,12 @@ def get_agent(
         name="bash_agent",
         model=lite_llm_model,
         tools=bash_tools,
+        planner=BuiltInPlanner(
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True,  # capture intermediate reasoning
+                thinking_budget=15000,  # tokens allocated for planning
+            )
+        ),
         description="An AI-powered bash environment assistant that can answer questions and execute terminal commands to help with complex workflows.",
         instruction=instruction,
     )
