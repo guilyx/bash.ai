@@ -211,10 +211,11 @@ def test_history_skill():
     assert skill.name == "history"
     assert "history" in skill.description.lower()
     tools = skill.get_tools()
-    assert len(tools) == 2
+    assert len(tools) == 3
     tool_names = [tool.name for tool in tools]
     assert "read_bash_history" in tool_names
     assert "read_conversation_history" in tool_names
+    assert "get_tool_call_stats" in tool_names
 
 
 def test_system_skill():

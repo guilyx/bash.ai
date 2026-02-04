@@ -14,7 +14,11 @@ from .config import (
     set_allowlist_blacklist,
 )
 from .globals import GLOBAL_ALLOWLIST, GLOBAL_BLACKLIST, GLOBAL_CWD
-from .history import read_bash_history, read_conversation_history
+from .history import (
+    get_tool_call_stats,
+    read_bash_history,
+    read_conversation_history,
+)
 from .registry import get_registry
 from .ros2 import (
     ros2_action_info,
@@ -82,6 +86,7 @@ __all__ = [
     # History tools
     "read_bash_history",
     "read_conversation_history",
+    "get_tool_call_stats",
     # System tools
     "get_current_datetime",
     # Tool manager tools
