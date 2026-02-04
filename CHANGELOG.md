@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-02-04 — MVP
+
+First production-ready release. Flouri is an AI-powered bash environment enhancement: ask questions or request commands via the `agent` CLI or the TUI; the agent uses an allowlist/blacklist and runs code in your environment.
+
 ### Added
 - Initial release of Flouri
 - Unified `agent` command that can both answer questions and execute commands
@@ -24,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API key management via environment variables
 - Security-focused agent instructions
 
-## [0.1.0] - 2025-01-16
+## [0.1.0] - 2026-01-16
 
 ### Added
 - Initial release
