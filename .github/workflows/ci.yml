@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    name: Lint
+    name: Lint (pre-commit)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,12 +20,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-      - name: Run black
-        run: black --check flourish
-      - name: Run ruff
-        run: ruff check flourish
-      - name: Run mypy
-        run: mypy flourish --ignore-missing-imports
+      - name: Set up pre-commit
+        run: pre-commit install-hooks
+      - name: Run pre-commit
+        run: pre-commit run --all-files
 
   test:
     name: Test Python ${{ matrix.python-version }}
