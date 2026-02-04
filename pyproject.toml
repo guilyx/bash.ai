@@ -83,7 +83,15 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["flourish"]
-omit = ["*/tests/*", "*/test_*.py"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    # Hard-to-unit-test: interactive TUI, runner loop, prompt-toolkit–coupled completer, ROS2 completions
+    "flourish/ui/tui.py",
+    "flourish/runner/runner.py",
+    "flourish/plugins/cd_completer.py",
+    "flourish/completions/ros2.py",
+]
 
 [tool.coverage.report]
 exclude_lines = [
