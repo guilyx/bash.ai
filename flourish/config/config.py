@@ -11,7 +11,7 @@ load_dotenv()
 
 # Default config directory
 CONFIG_DIR = Path(__file__).parent.parent.parent / "config"
-COMMANDS_CONFIG_FILE = CONFIG_DIR / "commands.json"
+CONFIG_FILE = CONFIG_DIR / "config.json"
 
 
 def load_commands_config() -> dict[str, list[str]]:
@@ -21,15 +21,24 @@ def load_commands_config() -> dict[str, list[str]]:
         Dictionary with 'allowlist' and 'blacklist' keys
     """
     # First try to load from project config directory
-    if COMMANDS_CONFIG_FILE.exists():
-        with open(COMMANDS_CONFIG_FILE) as f:
-            return json.load(f)
+    if CONFIG_FILE.exists():
+        with open(CONFIG_FILE) as f:
+            config = json.load(f)
+            # Return only allowlist/blacklist for backward compatibility
+            return {
+                "allowlist": config.get("allowlist", []),
+                "blacklist": config.get("blacklist", []),
+            }
 
     # Fall back to user config directory
-    user_config_file = Path.home() / ".config" / "flourish" / "commands.json"
+    user_config_file = Path.home() / ".config" / "flourish" / "config.json"
     if user_config_file.exists():
         with open(user_config_file) as f:
-            return json.load(f)
+            config = json.load(f)
+            return {
+                "allowlist": config.get("allowlist", []),
+                "blacklist": config.get("blacklist", []),
+            }
 
     # Return defaults
     return {
