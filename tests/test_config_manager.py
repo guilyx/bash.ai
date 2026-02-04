@@ -18,7 +18,7 @@ def temp_config_dir(tmp_path):
 @pytest.fixture
 def config_manager(temp_config_dir):
     """Create a ConfigManager with temporary config directory."""
-    config_file = temp_config_dir / "commands.json"
+    config_file = temp_config_dir / "config.json"
     return ConfigManager(config_file=str(config_file))
 
 
@@ -98,8 +98,13 @@ def test_multiple_commands(config_manager):
 
 def test_load_existing_config(config_manager):
     """Test loading existing config from file."""
-    # Manually write config file
-    config_data = {"allowlist": ["ls", "cd"], "blacklist": ["rm"]}
+    # Manually write config file (skills enable sets of tools; no tools section)
+    config_data = {
+        "allowlist": ["ls", "cd"],
+        "blacklist": ["rm"],
+        "skills": {"enabled": ["bash", "config"]},
+        "plugins": {"enabled": []},
+    }
     with open(config_manager.config_path, "w") as f:
         json.dump(config_data, f)
 
@@ -107,6 +112,7 @@ def test_load_existing_config(config_manager):
     config_manager._config = config_manager._load_config()
     assert "ls" in config_manager.get_allowlist()
     assert "rm" in config_manager.get_blacklist()
+    assert config_manager.get_enabled_skills() == ["bash", "config"]
 
 
 def test_get_model(config_manager):
@@ -127,6 +133,22 @@ def test_get_config(config_manager):
     assert isinstance(config, dict)
     assert "allowlist" in config
     assert "blacklist" in config
+    assert "skills" in config
+    assert "enabled" in config["skills"]
+    # Tools are derived from skills; config does not store tools
+    assert "tools" not in config
+
+
+def test_enabled_skills(config_manager):
+    """Test getting and setting enabled skills (skills enable sets of tools)."""
+    config_manager.set_enabled_skills(["bash", "config"])
+    assert config_manager.get_enabled_skills() == ["bash", "config"]
+
+    config_manager.add_skill("history")
+    assert set(config_manager.get_enabled_skills()) == {"bash", "config", "history"}
+
+    config_manager.remove_skill("config")
+    assert config_manager.get_enabled_skills() == ["bash", "history"]
 
 
 def test_duplicate_commands(config_manager):

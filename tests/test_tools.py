@@ -30,7 +30,7 @@ from flourish.tools import (
 @pytest.fixture
 def temp_config_file(tmp_path):
     """Create a temporary config file for tests."""
-    config_file = tmp_path / "commands.json"
+    config_file = tmp_path / "config.json"
     # Write default config
     import json
 
