@@ -52,9 +52,7 @@ def get_user() -> dict[str, Any]:
         "home_directory": home_dir,
         "current_working_directory": current_dir,
     }
-    log_tool_call(
-        "get_user", {}, result, success=True, duration_seconds=time.perf_counter() - t0
-    )
+    log_tool_call("get_user", {}, result, success=True, duration_seconds=time.perf_counter() - t0)
     return result
 
 
@@ -72,7 +70,10 @@ def set_cwd(path: str) -> str:
     if not os.path.isdir(path):
         error_msg = f"Invalid directory: {path}"
         log_tool_call(
-            "set_cwd", {"path": path}, error_msg, success=False,
+            "set_cwd",
+            {"path": path},
+            error_msg,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         raise ValueError(error_msg)
@@ -80,7 +81,10 @@ def set_cwd(path: str) -> str:
     globals_module.GLOBAL_CWD = path
     result = f"Working directory set to: {globals_module.GLOBAL_CWD}"
     log_tool_call(
-        "set_cwd", {"path": path}, result, success=True,
+        "set_cwd",
+        {"path": path},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result
@@ -118,7 +122,10 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
                     "message": f"Command '{base_cmd}' is blacklisted and cannot be executed",
                 }
                 log_tool_call(
-                    "execute_bash", {"cmd": cmd}, blocked_result, success=False,
+                    "execute_bash",
+                    {"cmd": cmd},
+                    blocked_result,
+                    success=False,
                     duration_seconds=time.perf_counter() - t0,
                 )
                 return blocked_result
@@ -158,7 +165,10 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
                     "message": f"Command '{base_cmd}' is blacklisted and cannot be executed",
                 }
                 log_tool_call(
-                    "execute_bash", {"cmd": cmd}, final_blocked_result, success=False,
+                    "execute_bash",
+                    {"cmd": cmd},
+                    final_blocked_result,
+                    success=False,
                     duration_seconds=time.perf_counter() - t0,
                 )
                 return final_blocked_result
@@ -210,7 +220,10 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
         }
         # Log tool call to conversation log
         log_tool_call(
-            "execute_bash", {"cmd": cmd}, error_result, success=False,
+            "execute_bash",
+            {"cmd": cmd},
+            error_result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         # Log terminal error to terminal log

@@ -41,7 +41,10 @@ def get_available_tools() -> dict[str, Any]:
             "count": len(available_tools),
         }
         log_tool_call(
-            "get_available_tools", {}, result, success=True,
+            "get_available_tools",
+            {},
+            result,
+            success=True,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -54,7 +57,10 @@ def get_available_tools() -> dict[str, Any]:
             "count": 0,
         }
         log_tool_call(
-            "get_available_tools", {}, result, success=False,
+            "get_available_tools",
+            {},
+            result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -77,7 +83,10 @@ def list_enabled_tools(tool_context: ToolContext | None = None) -> dict[str, Any
             "count": len(enabled_tools),
         }
         log_tool_call(
-            "list_enabled_tools", {}, result, success=True,
+            "list_enabled_tools",
+            {},
+            result,
+            success=True,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -87,7 +96,10 @@ def list_enabled_tools(tool_context: ToolContext | None = None) -> dict[str, Any
             "message": f"Failed to list enabled tools: {e}",
         }
         log_tool_call(
-            "list_enabled_tools", {}, result, success=False,
+            "list_enabled_tools",
+            {},
+            result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -116,7 +128,10 @@ def enable_tool(tool_name: str, tool_context: ToolContext | None = None) -> dict
                 "message": f"Unknown tool '{tool_name}'",
             }
             log_tool_call(
-                "enable_tool", {"tool_name": tool_name}, result, success=False,
+                "enable_tool",
+                {"tool_name": tool_name},
+                result,
+                success=False,
                 duration_seconds=time.perf_counter() - t0,
             )
             return result
@@ -131,7 +146,10 @@ def enable_tool(tool_name: str, tool_context: ToolContext | None = None) -> dict
             "enabled_tools": enabled_tools,
         }
         log_tool_call(
-            "enable_tool", {"tool_name": tool_name}, result, success=True,
+            "enable_tool",
+            {"tool_name": tool_name},
+            result,
+            success=True,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -141,7 +159,10 @@ def enable_tool(tool_name: str, tool_context: ToolContext | None = None) -> dict
             "message": f"Failed to enable tool '{tool_name}': {e}",
         }
         log_tool_call(
-            "enable_tool", {"tool_name": tool_name}, result, success=False,
+            "enable_tool",
+            {"tool_name": tool_name},
+            result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -170,7 +191,10 @@ def disable_tool(tool_name: str, tool_context: ToolContext | None = None) -> dic
                 "message": f"Unknown tool '{tool_name}'",
             }
             log_tool_call(
-                "disable_tool", {"tool_name": tool_name}, result, success=False,
+                "disable_tool",
+                {"tool_name": tool_name},
+                result,
+                success=False,
                 duration_seconds=time.perf_counter() - t0,
             )
             return result
@@ -185,7 +209,10 @@ def disable_tool(tool_name: str, tool_context: ToolContext | None = None) -> dic
             "enabled_tools": enabled_tools,
         }
         log_tool_call(
-            "disable_tool", {"tool_name": tool_name}, result, success=True,
+            "disable_tool",
+            {"tool_name": tool_name},
+            result,
+            success=True,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -195,7 +222,10 @@ def disable_tool(tool_name: str, tool_context: ToolContext | None = None) -> dic
             "message": f"Failed to disable tool '{tool_name}': {e}",
         }
         log_tool_call(
-            "disable_tool", {"tool_name": tool_name}, result, success=False,
+            "disable_tool",
+            {"tool_name": tool_name},
+            result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         return result

@@ -1,6 +1,7 @@
 """Configuration and allowlist/blacklist management tools."""
 
 import time
+
 from google.adk.tools import ToolContext
 
 from ...logging import log_tool_call
@@ -50,7 +51,10 @@ def add_to_allowlist(command: str, tool_context: ToolContext | None = None) -> d
         "allowlist": globals_module.GLOBAL_ALLOWLIST.copy(),
     }
     log_tool_call(
-        "add_to_allowlist", {"command": command}, result, success=True,
+        "add_to_allowlist",
+        {"command": command},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result
@@ -88,7 +92,10 @@ def remove_from_allowlist(command: str, tool_context: ToolContext | None = None)
         ),
     }
     log_tool_call(
-        "remove_from_allowlist", {"command": command}, result, success=True,
+        "remove_from_allowlist",
+        {"command": command},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result
@@ -138,7 +145,10 @@ def add_to_blacklist(command: str, tool_context: ToolContext | None = None) -> d
         "blacklist": globals_module.GLOBAL_BLACKLIST.copy(),
     }
     log_tool_call(
-        "add_to_blacklist", {"command": command}, result, success=True,
+        "add_to_blacklist",
+        {"command": command},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result
@@ -176,7 +186,10 @@ def remove_from_blacklist(command: str, tool_context: ToolContext | None = None)
         ),
     }
     log_tool_call(
-        "remove_from_blacklist", {"command": command}, result, success=True,
+        "remove_from_blacklist",
+        {"command": command},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result
@@ -198,7 +211,10 @@ def list_allowlist() -> dict:
         "count": len(globals_module.GLOBAL_ALLOWLIST) if globals_module.GLOBAL_ALLOWLIST else 0,
     }
     log_tool_call(
-        "list_allowlist", {}, result, success=True,
+        "list_allowlist",
+        {},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result
@@ -220,7 +236,10 @@ def list_blacklist() -> dict:
         "count": len(globals_module.GLOBAL_BLACKLIST) if globals_module.GLOBAL_BLACKLIST else 0,
     }
     log_tool_call(
-        "list_blacklist", {}, result, success=True,
+        "list_blacklist",
+        {},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result
@@ -249,7 +268,10 @@ def is_in_allowlist(command: str) -> dict:
             "in_allowlist": False,
         }
         log_tool_call(
-            "is_in_allowlist", {"command": command}, result, success=False,
+            "is_in_allowlist",
+            {"command": command},
+            result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -275,7 +297,10 @@ def is_in_allowlist(command: str) -> dict:
         "matched_entry": matched_entry,
     }
     log_tool_call(
-        "is_in_allowlist", {"command": command}, result, success=True,
+        "is_in_allowlist",
+        {"command": command},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result
@@ -304,7 +329,10 @@ def is_in_blacklist(command: str) -> dict:
             "in_blacklist": False,
         }
         log_tool_call(
-            "is_in_blacklist", {"command": command}, result, success=False,
+            "is_in_blacklist",
+            {"command": command},
+            result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -330,7 +358,10 @@ def is_in_blacklist(command: str) -> dict:
         "matched_entry": matched_entry,
     }
     log_tool_call(
-        "is_in_blacklist", {"command": command}, result, success=True,
+        "is_in_blacklist",
+        {"command": command},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result

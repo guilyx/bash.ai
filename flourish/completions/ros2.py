@@ -1,7 +1,6 @@
 """ROS2 command completion for Flourish."""
 
 import subprocess
-from typing import Any
 
 from prompt_toolkit.completion import Completion
 
@@ -91,9 +90,7 @@ def _get_ros2_actions() -> list[str]:
     return []
 
 
-def complete_ros2(
-    current_word: str, words: list[str], word_index: int
-) -> list[Completion]:
+def complete_ros2(current_word: str, words: list[str], word_index: int) -> list[Completion]:
     """Complete ROS2 commands and subcommands.
 
     Args:

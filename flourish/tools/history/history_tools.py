@@ -41,7 +41,10 @@ def read_bash_history(limit: int = 50) -> dict[str, Any]:
         if not history_file.exists():
             result["message"] = "History file does not exist yet"
             log_tool_call(
-                "read_bash_history", {"limit": limit}, result, success=True,
+                "read_bash_history",
+                {"limit": limit},
+                result,
+                success=True,
                 duration_seconds=time.perf_counter() - t0,
             )
             return result
@@ -70,7 +73,10 @@ def read_bash_history(limit: int = 50) -> dict[str, Any]:
         result["status"] = "error"
         result["message"] = "Permission denied reading history file"
         log_tool_call(
-            "read_bash_history", {"limit": limit}, result, success=False,
+            "read_bash_history",
+            {"limit": limit},
+            result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -78,13 +84,19 @@ def read_bash_history(limit: int = 50) -> dict[str, Any]:
         result["status"] = "error"
         result["message"] = f"Error reading history: {str(e)}"
         log_tool_call(
-            "read_bash_history", {"limit": limit}, result, success=False,
+            "read_bash_history",
+            {"limit": limit},
+            result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
 
     log_tool_call(
-        "read_bash_history", {"limit": limit}, result, success=True,
+        "read_bash_history",
+        {"limit": limit},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result
@@ -123,7 +135,10 @@ def read_conversation_history(limit: int = 20) -> dict[str, Any]:
         if not logs_dir.exists():
             result["message"] = "Logs directory does not exist yet"
             log_tool_call(
-                "read_conversation_history", {"limit": limit}, result, success=True,
+                "read_conversation_history",
+                {"limit": limit},
+                result,
+                success=True,
                 duration_seconds=time.perf_counter() - t0,
             )
             return result
@@ -138,7 +153,10 @@ def read_conversation_history(limit: int = 20) -> dict[str, Any]:
         if not session_dirs:
             result["message"] = "No session logs found"
             log_tool_call(
-                "read_conversation_history", {"limit": limit}, result, success=True,
+                "read_conversation_history",
+                {"limit": limit},
+                result,
+                success=True,
                 duration_seconds=time.perf_counter() - t0,
             )
             return result
@@ -150,7 +168,10 @@ def read_conversation_history(limit: int = 20) -> dict[str, Any]:
         if not conversation_log.exists():
             result["message"] = "Conversation log file does not exist"
             log_tool_call(
-                "read_conversation_history", {"limit": limit}, result, success=True,
+                "read_conversation_history",
+                {"limit": limit},
+                result,
+                success=True,
                 duration_seconds=time.perf_counter() - t0,
             )
             return result
@@ -200,7 +221,10 @@ def read_conversation_history(limit: int = 20) -> dict[str, Any]:
         result["status"] = "error"
         result["message"] = "Permission denied reading conversation logs"
         log_tool_call(
-            "read_conversation_history", {"limit": limit}, result, success=False,
+            "read_conversation_history",
+            {"limit": limit},
+            result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
@@ -208,13 +232,19 @@ def read_conversation_history(limit: int = 20) -> dict[str, Any]:
         result["status"] = "error"
         result["message"] = f"Error reading conversation history: {str(e)}"
         log_tool_call(
-            "read_conversation_history", {"limit": limit}, result, success=False,
+            "read_conversation_history",
+            {"limit": limit},
+            result,
+            success=False,
             duration_seconds=time.perf_counter() - t0,
         )
         return result
 
     log_tool_call(
-        "read_conversation_history", {"limit": limit}, result, success=True,
+        "read_conversation_history",
+        {"limit": limit},
+        result,
+        success=True,
         duration_seconds=time.perf_counter() - t0,
     )
     return result
@@ -335,11 +365,9 @@ def get_tool_call_stats(
                 by_tool[tool]["durations"].append(float(dur))
 
         # Add derived stats per tool
-        for tool, stats in by_tool.items():
+        for _, stats in by_tool.items():
             count = stats["count"]
-            stats["success_rate"] = (
-                round(stats["success_count"] / count, 4) if count else 0.0
-            )
+            stats["success_rate"] = round(stats["success_count"] / count, 4) if count else 0.0
             stats["avg_duration_seconds"] = (
                 round(stats["total_duration_seconds"] / len(stats["durations"]), 4)
                 if stats["durations"]
@@ -362,9 +390,7 @@ def get_tool_call_stats(
                 for e in recent
             ]
 
-        result["message"] = (
-            f"Parsed {len(all_calls)} tool calls from {len(log_files)} session(s)"
-        )
+        result["message"] = f"Parsed {len(all_calls)} tool calls from {len(log_files)} session(s)"
 
     except PermissionError:
         result["status"] = "error"

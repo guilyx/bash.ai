@@ -458,9 +458,7 @@ def ros2_bag_record(
     # Show user feedback immediately when recording starts
     print(user_message, flush=True)
 
-    result = _execute_ros2_command_streaming(
-        "bag", ["record"] + args, "ros2_bag_record"
-    )
+    result = _execute_ros2_command_streaming("bag", ["record"] + args, "ros2_bag_record")
     result["output_path"] = output_path
     result["recording_summary"] = recording_summary
     result["message"] = user_message
@@ -527,9 +525,7 @@ def ros2_bag_play(
     # Show user feedback immediately when playback starts
     print(user_message, flush=True)
 
-    result = _execute_ros2_command_streaming(
-        "bag", ["play"] + args, "ros2_bag_play"
-    )
+    result = _execute_ros2_command_streaming("bag", ["play"] + args, "ros2_bag_play")
     result["bag_path"] = bag_path
     result["message"] = user_message
     return result

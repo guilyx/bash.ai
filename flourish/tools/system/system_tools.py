@@ -53,7 +53,10 @@ class GetCurrentDatetimeTool(Tool):
         }
 
         log_tool_call(
-            "get_current_datetime", {}, result, success=True,
+            "get_current_datetime",
+            {},
+            result,
+            success=True,
             duration_seconds=time.perf_counter() - t0,
         )
         return result

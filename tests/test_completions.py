@@ -1,6 +1,5 @@
 """Tests for completion system."""
 
-
 from prompt_toolkit.completion import Completion
 
 from flourish.completions.loader import CompletionLoader

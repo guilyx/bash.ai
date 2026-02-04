@@ -1,6 +1,5 @@
 """Tests for logging system."""
 
-
 import pytest
 
 from flourish.logging import (

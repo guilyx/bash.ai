@@ -1,6 +1,5 @@
 """Additional tests for enhancers."""
 
-
 from flourish.plugins.enhancers import LsColorEnhancer
 
 
