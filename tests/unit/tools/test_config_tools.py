@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from flourish.tools import globals as globals_module
-from flourish.tools.config import config_tools
+from flouri.tools import globals as globals_module
+from flouri.tools.config import config_tools
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +20,7 @@ def reset_globals():
 
 @pytest.fixture(autouse=True)
 def mock_log_tool_call():
-    with patch("flourish.tools.config.config_tools.log_tool_call"):
+    with patch("flouri.tools.config.config_tools.log_tool_call"):
         yield
 
 
@@ -35,9 +35,7 @@ def test_add_to_allowlist_when_global_none():
 def test_add_to_allowlist_config_manager_exception():
     """add_to_allowlist succeeds when ConfigManager raises."""
     globals_module.GLOBAL_ALLOWLIST = []
-    with patch(
-        "flourish.config.config_manager.ConfigManager", side_effect=RuntimeError("no config")
-    ):
+    with patch("flouri.config.config_manager.ConfigManager", side_effect=RuntimeError("no config")):
         result = config_tools.add_to_allowlist("pwd")
     assert result["status"] == "success"
     assert "pwd" in result["allowlist"]
@@ -46,7 +44,7 @@ def test_add_to_allowlist_config_manager_exception():
 def test_remove_from_allowlist_when_in_list():
     """remove_from_allowlist removes command and updates config when in list."""
     globals_module.GLOBAL_ALLOWLIST = ["ls", "pwd"]
-    with patch("flourish.config.config_manager.ConfigManager") as mock_cm:
+    with patch("flouri.config.config_manager.ConfigManager") as mock_cm:
         result = config_tools.remove_from_allowlist("pwd")
     assert result["status"] == "success"
     assert globals_module.GLOBAL_ALLOWLIST == ["ls"]
@@ -56,7 +54,7 @@ def test_remove_from_allowlist_when_in_list():
 def test_remove_from_allowlist_config_manager_exception():
     """remove_from_allowlist succeeds when ConfigManager raises."""
     globals_module.GLOBAL_ALLOWLIST = ["ls"]
-    with patch("flourish.config.config_manager.ConfigManager", side_effect=OSError("read-only")):
+    with patch("flouri.config.config_manager.ConfigManager", side_effect=OSError("read-only")):
         result = config_tools.remove_from_allowlist("ls")
     assert result["status"] == "success"
     assert globals_module.GLOBAL_ALLOWLIST == []
@@ -73,9 +71,7 @@ def test_add_to_blacklist_when_global_none():
 def test_add_to_blacklist_config_manager_exception():
     """add_to_blacklist succeeds when ConfigManager raises."""
     globals_module.GLOBAL_BLACKLIST = []
-    with patch(
-        "flourish.config.config_manager.ConfigManager", side_effect=ImportError("no module")
-    ):
+    with patch("flouri.config.config_manager.ConfigManager", side_effect=ImportError("no module")):
         result = config_tools.add_to_blacklist("dd")
     assert result["status"] == "success"
     assert "dd" in result["blacklist"]
@@ -84,7 +80,7 @@ def test_add_to_blacklist_config_manager_exception():
 def test_remove_from_blacklist_config_manager_exception():
     """remove_from_blacklist succeeds when ConfigManager raises."""
     globals_module.GLOBAL_BLACKLIST = ["rm"]
-    with patch("flourish.config.config_manager.ConfigManager", side_effect=RuntimeError("fail")):
+    with patch("flouri.config.config_manager.ConfigManager", side_effect=RuntimeError("fail")):
         result = config_tools.remove_from_blacklist("rm")
     assert result["status"] == "success"
     assert globals_module.GLOBAL_BLACKLIST == []

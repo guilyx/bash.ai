@@ -1,1 +1,1 @@
-# Unit tests for flourish.ui
+# Unit tests for flouri.ui

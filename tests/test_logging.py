@@ -2,7 +2,7 @@
 
 import pytest
 
-from flourish.logging import (
+from flouri.logging import (
     get_session_dir,
     initialize_session_log,
     log_conversation,
@@ -18,7 +18,7 @@ def temp_logs_dir(tmp_path, monkeypatch):
     """Create a temporary logs directory."""
     logs_dir = tmp_path / "logs"
     logs_dir.mkdir(parents=True)
-    monkeypatch.setattr("flourish.logging.logger.BASE_LOGS_DIR", logs_dir)
+    monkeypatch.setattr("flouri.logging.logger.BASE_LOGS_DIR", logs_dir)
     return logs_dir
 
 

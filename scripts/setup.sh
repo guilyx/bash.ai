@@ -1,9 +1,9 @@
 #!/bin/bash
-# Setup script for Flourish
+# Setup script for Flouri
 
 set -e
 
-echo "🚀 Setting up Flourish..."
+echo "🚀 Setting up Flouri..."
 
 # Check for Python
 if ! command -v python3 &> /dev/null; then
@@ -58,20 +58,20 @@ echo "📦 Installing dependencies..."
 uv sync
 
 # Install the package
-echo "🔨 Installing Flourish..."
+echo "🔨 Installing Flouri..."
 uv pip install -e .
 
-if command -v flourish &> /dev/null; then
-    echo "✅ Setup successful! Flourish is ready to use."
+if command -v flouri &> /dev/null; then
+    echo "✅ Setup successful! Flouri is ready to use."
     echo ""
     echo "Next steps:"
     echo "1. Edit .env and add your API_KEY"
-    echo "2. Try it out: flourish 'Hello, world!'"
+    echo "2. Try it out: flouri 'Hello, world!'"
     echo ""
     echo "To integrate with bash:"
     echo "  source scripts/bash_integration.sh"
     echo "  # or add to your ~/.bashrc or ~/.zshrc"
 else
-    echo "⚠️  flourish command not found in PATH"
-    echo "   You can run it with: uv run flourish"
+    echo "⚠️  flouri command not found in PATH"
+    echo "   You can run it with: uv run flouri"
 fi

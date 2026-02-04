@@ -1,6 +1,6 @@
 # LLM and Agent Documentation
 
-This directory holds documentation about Flourish’s use of LLMs and the agent layer.
+This directory holds documentation about Flouri’s use of LLMs and the agent layer.
 
 | Document | Description |
 |----------|-------------|

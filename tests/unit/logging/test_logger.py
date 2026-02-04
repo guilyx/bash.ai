@@ -3,7 +3,7 @@
 import json
 from unittest.mock import MagicMock, patch
 
-from flourish.logging import logger as log_module
+from flouri.logging import logger as log_module
 
 
 def test_initialize_session_log_creates_session_dir(tmp_path):
@@ -74,7 +74,7 @@ def test_log_tool_call_json_fallback():
     mock_logger = MagicMock()
     with patch.object(log_module, "_setup_conversation_logger", return_value=mock_logger):
         # Cause json.dumps to fail by passing a result that custom serializer could break on
-        with patch("flourish.logging.logger.json.dumps", side_effect=TypeError("not serializable")):
+        with patch("flouri.logging.logger.json.dumps", side_effect=TypeError("not serializable")):
             log_module.log_tool_call("t", {}, "result", success=True)
     mock_logger.warning.assert_called_once()
     assert "Failed to log tool call" in mock_logger.warning.call_args[0][0]
@@ -110,7 +110,7 @@ def test_log_conversation_json_fallback():
     """log_conversation falls back when JSON serialization fails."""
     mock_logger = MagicMock()
     with patch.object(log_module, "_setup_conversation_logger", return_value=mock_logger):
-        with patch("flourish.logging.logger.json.dumps", side_effect=ValueError("bad")):
+        with patch("flouri.logging.logger.json.dumps", side_effect=ValueError("bad")):
             log_module.log_conversation("user", "hi")
     mock_logger.warning.assert_called_once()
     mock_logger.info.assert_called_once()
@@ -135,7 +135,7 @@ def test_log_terminal_output_json_fallback():
     """log_terminal_output falls back when JSON fails and logs stdout/stderr."""
     mock_logger = MagicMock()
     with patch.object(log_module, "_setup_terminal_logger", return_value=mock_logger):
-        with patch("flourish.logging.logger.json.dumps", side_effect=TypeError("err")):
+        with patch("flouri.logging.logger.json.dumps", side_effect=TypeError("err")):
             log_module.log_terminal_output("cmd", stdout="out", stderr="err")
     mock_logger.warning.assert_called_once()
     assert mock_logger.info.call_count >= 2  # Command line + STDOUT/STDERR
@@ -157,7 +157,7 @@ def test_log_terminal_error_json_fallback():
     """log_terminal_error falls back when JSON fails."""
     mock_logger = MagicMock()
     with patch.object(log_module, "_setup_terminal_logger", return_value=mock_logger):
-        with patch("flourish.logging.logger.json.dumps", side_effect=RuntimeError("err")):
+        with patch("flouri.logging.logger.json.dumps", side_effect=RuntimeError("err")):
             log_module.log_terminal_error("cmd", "err")
     mock_logger.warning.assert_called_once()
     mock_logger.error.assert_called_once()

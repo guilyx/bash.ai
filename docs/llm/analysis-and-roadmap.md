@@ -1,6 +1,6 @@
 # LLM Integration: Critical Analysis and Roadmap
 
-This document is an objective, critical review of Flourish’s LLM/agent integration. It does not aim to be agreeable; it calls out gaps, inconsistencies, and design flaws so that improvements can be prioritized on evidence.
+This document is an objective, critical review of Flouri’s LLM/agent integration. It does not aim to be agreeable; it calls out gaps, inconsistencies, and design flaws so that improvements can be prioritized on evidence.
 
 ---
 
@@ -122,7 +122,7 @@ There is no multi-turn conversation in the current implementation. Every call is
 
 **No token or cost visibility.**
 
-- The runner does not capture or log token usage. LiteLLM and providers often expose this, but Flourish does not surface it. So users and operators cannot see per-request or per-session cost.
+- The runner does not capture or log token usage. LiteLLM and providers often expose this, but Flouri does not surface it. So users and operators cannot see per-request or per-session cost.
 
 **Tool calls are logged but not structured for analysis.**
 
@@ -227,4 +227,4 @@ This section is ordered by dependency and impact. It does not endorse a particul
 
 ## 5. Conclusion
 
-The current LLM integration works for single-turn, “one question, one answer” usage, but it is built on a number of questionable or undocumented choices: no real session, no context in the prompt, no streaming in the TUI, duplicated and inconsistent runner logic, and a security model that is both strict in code (blacklist) and permissive (auto-add to allowlist) and incorrectly described in the architecture doc. To “propel Flourish forward” in a way that is reliable, auditable, and cost-conscious, the priorities should be: **correct documentation**, **injected context and explicit allowlist/blacklist in the prompt**, **a single, well-tested runner path**, **streaming in the TUI**, and **session + history for multi-turn**. Without these, the system will remain fragile, hard to operate, and misleading to readers of the docs.
+The current LLM integration works for single-turn, “one question, one answer” usage, but it is built on a number of questionable or undocumented choices: no real session, no context in the prompt, no streaming in the TUI, duplicated and inconsistent runner logic, and a security model that is both strict in code (blacklist) and permissive (auto-add to allowlist) and incorrectly described in the architecture doc. To “propel Flouri forward” in a way that is reliable, auditable, and cost-conscious, the priorities should be: **correct documentation**, **injected context and explicit allowlist/blacklist in the prompt**, **a single, well-tested runner path**, **streaming in the TUI**, and **session + history for multi-turn**. Without these, the system will remain fragile, hard to operate, and misleading to readers of the docs.

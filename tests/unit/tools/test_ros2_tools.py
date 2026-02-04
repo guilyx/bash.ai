@@ -4,12 +4,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from flourish.tools.ros2 import ros2_tools
+from flouri.tools.ros2 import ros2_tools
 
 
 @pytest.fixture(autouse=True)
 def mock_log_tool_call():
-    with patch("flourish.tools.ros2.ros2_tools.log_tool_call"):
+    with patch("flouri.tools.ros2.ros2_tools.log_tool_call"):
         yield
 
 
@@ -19,7 +19,7 @@ def test_execute_ros2_command_success():
     mock_process.returncode = 0
     mock_process.communicate.return_value = ("topic1\ntopic2", "")
 
-    with patch("flourish.tools.ros2.ros2_tools.subprocess.Popen", return_value=mock_process):
+    with patch("flouri.tools.ros2.ros2_tools.subprocess.Popen", return_value=mock_process):
         result = ros2_tools._execute_ros2_command("topic", ["list"], "ros2_topic_list")
 
     assert result["status"] == "success"
@@ -34,7 +34,7 @@ def test_execute_ros2_command_nonzero_exit():
     mock_process.returncode = 1
     mock_process.communicate.return_value = ("", "ros2 not found")
 
-    with patch("flourish.tools.ros2.ros2_tools.subprocess.Popen", return_value=mock_process):
+    with patch("flouri.tools.ros2.ros2_tools.subprocess.Popen", return_value=mock_process):
         result = ros2_tools._execute_ros2_command("topic", ["list"], "ros2_topic_list")
 
     assert result["status"] == "error"
@@ -45,7 +45,7 @@ def test_execute_ros2_command_nonzero_exit():
 def test_execute_ros2_command_exception():
     """_execute_ros2_command returns error dict when Popen raises."""
     with patch(
-        "flourish.tools.ros2.ros2_tools.subprocess.Popen",
+        "flouri.tools.ros2.ros2_tools.subprocess.Popen",
         side_effect=FileNotFoundError("ros2 not found"),
     ):
         result = ros2_tools._execute_ros2_command("topic", ["list"], "ros2_topic_list")
@@ -60,7 +60,7 @@ def test_execute_ros2_command_streaming_success():
     mock_process = MagicMock()
     mock_process.returncode = 0
 
-    with patch("flourish.tools.ros2.ros2_tools.subprocess.Popen", return_value=mock_process):
+    with patch("flouri.tools.ros2.ros2_tools.subprocess.Popen", return_value=mock_process):
         result = ros2_tools._execute_ros2_command_streaming(
             "bag", ["record", "-a"], "ros2_bag_record"
         )
@@ -73,7 +73,7 @@ def test_execute_ros2_command_streaming_success():
 def test_execute_ros2_command_streaming_exception():
     """_execute_ros2_command_streaming returns error when Popen raises."""
     with patch(
-        "flourish.tools.ros2.ros2_tools.subprocess.Popen",
+        "flouri.tools.ros2.ros2_tools.subprocess.Popen",
         side_effect=OSError("resource unavailable"),
     ):
         result = ros2_tools._execute_ros2_command_streaming("bag", ["record"], "ros2_bag_record")

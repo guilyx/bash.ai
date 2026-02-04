@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from flourish.tools import globals as globals_module
-from flourish.tools.bash import bash_tools
+from flouri.tools import globals as globals_module
+from flouri.tools.bash import bash_tools
 
 
 @pytest.fixture(autouse=True)
@@ -21,9 +21,9 @@ def reset_globals():
 
 @pytest.fixture(autouse=True)
 def mock_logging():
-    with patch("flourish.tools.bash.bash_tools.log_tool_call"):
-        with patch("flourish.tools.bash.bash_tools.log_terminal_output"):
-            with patch("flourish.tools.bash.bash_tools.log_terminal_error"):
+    with patch("flouri.tools.bash.bash_tools.log_tool_call"):
+        with patch("flouri.tools.bash.bash_tools.log_terminal_output"):
+            with patch("flouri.tools.bash.bash_tools.log_terminal_error"):
                 yield
 
 
@@ -45,10 +45,8 @@ def test_execute_bash_blacklisted():
 def test_execute_bash_allowlist_add_config_manager_exception():
     """execute_bash adds to allowlist and continues when ConfigManager raises."""
     globals_module.GLOBAL_ALLOWLIST = ["ls"]  # "pwd" not in allowlist
-    with patch(
-        "flourish.config.config_manager.ConfigManager", side_effect=RuntimeError("no config")
-    ):
-        with patch("flourish.tools.bash.bash_tools.subprocess.Popen") as mock_popen:
+    with patch("flouri.config.config_manager.ConfigManager", side_effect=RuntimeError("no config")):
+        with patch("flouri.tools.bash.bash_tools.subprocess.Popen") as mock_popen:
             mock_proc = MagicMock()
             mock_proc.returncode = 0
             mock_proc.communicate.return_value = ("/home", "")
@@ -61,9 +59,7 @@ def test_execute_bash_allowlist_add_config_manager_exception():
 def test_execute_bash_subprocess_exception():
     """execute_bash returns error and logs when subprocess raises."""
     globals_module.GLOBAL_ALLOWLIST = ["true"]
-    with patch(
-        "flourish.tools.bash.bash_tools.subprocess.Popen", side_effect=OSError("Cannot fork")
-    ):
+    with patch("flouri.tools.bash.bash_tools.subprocess.Popen", side_effect=OSError("Cannot fork")):
         result = bash_tools.execute_bash("true")
     assert result["status"] == "error"
     assert "message" in result

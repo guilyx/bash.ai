@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
-from flourish.ui.banner import animate_banner, print_banner
+from flouri.ui.banner import animate_banner, print_banner
 
 
 def test_print_banner():
     """Test print_banner function."""
     # Should not raise
-    with patch("flourish.ui.banner.animate_banner") as mock_animate:
+    with patch("flouri.ui.banner.animate_banner") as mock_animate:
         print_banner()
         mock_animate.assert_called_once()
 

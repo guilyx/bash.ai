@@ -1,1 +1,1 @@
-"""Tests for Flourish."""
+"""Tests for Flouri."""

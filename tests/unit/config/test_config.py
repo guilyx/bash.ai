@@ -1,10 +1,10 @@
-"""Unit tests for flourish.config.config (load_commands_config, Settings)."""
+"""Unit tests for flouri.config.config (load_commands_config, Settings)."""
 
 import json
 from pathlib import Path
 from unittest.mock import patch
 
-from flourish.config import config as config_module
+from flouri.config import config as config_module
 
 
 def test_load_commands_config_project_file(tmp_path):
@@ -38,8 +38,8 @@ def test_load_commands_config_user_fallback(tmp_path):
     )
     with patch.object(config_module, "CONFIG_FILE", Path("/nonexistent/project/config.json")):
         with patch.object(Path, "home", return_value=tmp_path):
-            # user_config_file = tmp_path / ".config" / "flourish" / "config.json"
-            user_config_dir = tmp_path / ".config" / "flourish"
+            # user_config_file = tmp_path / ".config" / "flouri" / "config.json"
+            user_config_dir = tmp_path / ".config" / "flouri"
             user_config_dir.mkdir(parents=True)
             (user_config_dir / "config.json").write_text(
                 json.dumps(

@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial release of Flourish
+- Initial release of Flouri
 - Unified `agent` command that can both answer questions and execute commands
 - Intelligent code execution that automatically determines when to run commands
 - Allowlist and blacklist support for command execution security

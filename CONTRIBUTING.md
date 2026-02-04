@@ -1,6 +1,6 @@
-# Contributing to Flourish
+# Contributing to Flouri
 
-Thank you for your interest in contributing to Flourish! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Flouri! This document provides guidelines and instructions for contributing.
 
 ## Code of Conduct
 
@@ -10,7 +10,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/made-after-dark/flourish/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/made-after-dark/flouri/issues)
 2. If not, create a new issue with:
    - A clear, descriptive title
    - Steps to reproduce the bug
@@ -20,7 +20,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Suggesting Features
 
-1. Check existing [Issues](https://github.com/made-after-dark/flourish/issues) and [Discussions](https://github.com/made-after-dark/flourish/discussions)
+1. Check existing [Issues](https://github.com/made-after-dark/flouri/issues) and [Discussions](https://github.com/made-after-dark/flouri/discussions)
 2. Create a new issue or discussion thread with:
    - A clear description of the feature
    - Use cases and examples
@@ -30,8 +30,8 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 1. **Fork the repository**
    ```bash
-   git clone https://github.com/your-username/flourish.git
-   cd flourish
+   git clone https://github.com/your-username/flouri.git
+   cd flouri
    ```
 
 2. **Create a feature branch**
@@ -63,7 +63,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
    ```bash
    uv run ruff check .
    uv run black --check .
-   uv run mypy flourish
+   uv run mypy flouri
    uv run pytest
    ```
 
@@ -122,8 +122,8 @@ By participating in this project, you agree to maintain a respectful and inclusi
 ## Project Structure
 
 ```
-flourish/
-├── flourish/              # Main package
+flouri/
+├── flouri/              # Main package
 │   ├── __init__.py
 │   ├── agent/            # Agent definitions
 │   ├── completions/      # Command completion system
@@ -147,14 +147,14 @@ flourish/
 └── ...
 ```
 
-## Extending Flourish with Plugins
+## Extending Flouri with Plugins
 
-Flourish has a powerful plugin system that allows you to add custom commands, aliases, and behaviors. See [docs/plugins.md](docs/plugins.md) for detailed information on creating plugins.
+Flouri has a powerful plugin system that allows you to add custom commands, aliases, and behaviors. See [docs/plugins.md](docs/plugins.md) for detailed information on creating plugins.
 
 ### Quick Plugin Example
 
 ```python
-from flourish.plugins import Plugin
+from flouri.plugins import Plugin
 from typing import Any
 
 class MyPlugin(Plugin):
@@ -183,8 +183,8 @@ For more details, see the [Plugin System Documentation](docs/plugins.md).
 
 ## Questions?
 
-- Open a [Discussion](https://github.com/made-after-dark/flourish/discussions)
-- Check existing [Issues](https://github.com/made-after-dark/flourish/issues)
+- Open a [Discussion](https://github.com/made-after-dark/flouri/discussions)
+- Check existing [Issues](https://github.com/made-after-dark/flouri/issues)
 - Reach out to maintainers
 
-Thank you for contributing to flourish! 🚀
+Thank you for contributing to flouri! 🚀

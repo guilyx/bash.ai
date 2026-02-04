@@ -2,7 +2,7 @@
 
 import pytest
 
-from flourish.tools import (
+from flouri.tools import (
     BaseSkill,
     FunctionToolWrapper,
     Skill,
@@ -10,12 +10,12 @@ from flourish.tools import (
     Tool,
     get_registry,
 )
-from flourish.tools.bash.skill import BashSkill
-from flourish.tools.config.skill import ConfigSkill
-from flourish.tools.history.skill import HistorySkill
-from flourish.tools.ros2.skill import ROS2Skill
-from flourish.tools.system.skill import SystemSkill
-from flourish.tools.tool_manager.skill import ToolManagerSkill
+from flouri.tools.bash.skill import BashSkill
+from flouri.tools.config.skill import ConfigSkill
+from flouri.tools.history.skill import HistorySkill
+from flouri.tools.ros2.skill import ROS2Skill
+from flouri.tools.system.skill import SystemSkill
+from flouri.tools.tool_manager.skill import ToolManagerSkill
 
 
 def test_tool_base_class():

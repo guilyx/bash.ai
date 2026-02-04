@@ -1,11 +1,11 @@
-# Flourish (flouri.sh)
+# Flouri (flouri.sh)
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Linting: ruff](https://img.shields.io/badge/linting-ruff-yellow.svg)](https://github.com/astral-sh/ruff)
-[![CI](https://github.com/guilyx/flourish/actions/workflows/ci.yml/badge.svg)](https://github.com/guilyx/flourish/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/guilyx/flourish/graph/badge.svg?token=LLS960LIGU)](https://codecov.io/gh/guilyx/flourish)
+[![CI](https://github.com/guilyx/flouri/actions/workflows/ci.yml/badge.svg)](https://github.com/guilyx/flouri/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/guilyx/flouri/graph/badge.svg?token=LLS960LIGU)](https://codecov.io/gh/guilyx/flouri)
 
 ```bash
 ╔═════════════════════════════════════════════════════════════════════╗
@@ -22,7 +22,7 @@
 ╚═════════════════════════════════════════════════════════════════════╝
 ```
 
-Flourish is an open-source tool that enhances your terminal environment with agentic AI capabilities. It allows you to interact with various LLMs directly from your terminal and execute complex workflows through AI orchestration.
+Flouri is an open-source tool that enhances your terminal environment with agentic AI capabilities. It allows you to interact with various LLMs directly from your terminal and execute complex workflows through AI orchestration.
 
 ## Features
 
@@ -73,8 +73,8 @@ pyenv global 3.12.0
 
 1. **Install and configure**:
    ```bash
-   git clone https://github.com/made-after-dark/flourish.git
-   cd flourish
+   git clone https://github.com/made-after-dark/flouri.git
+   cd flouri
    python3.12 -m venv .venv
    source .venv/bin/activate
    pip install -e ".[dev]"
@@ -84,10 +84,10 @@ pyenv global 3.12.0
 
 2. **Launch the terminal**:
    ```bash
-   flourish
+   flouri
    ```
 
-   When you launch Flourish, you'll see:
+   When you launch Flouri, you'll see:
    - A beautiful ASCII banner animation
    - Welcome message with usage hints
    - Your current directory in the prompt
@@ -108,8 +108,8 @@ pyenv global 3.12.0
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/made-after-dark/flourish.git
-   cd flourish
+   git clone https://github.com/made-after-dark/flouri.git
+   cd flouri
    ```
 
 2. Create and activate a virtual environment:
@@ -183,14 +183,14 @@ $ ? what dependencies does this project need?
 Launch the AI-enabled terminal environment:
 
 ```bash
-flourish
+flouri
 # or
-flourish tui
+flouri tui
 ```
 
-#### What Happens When You Open Flourish?
+#### What Happens When You Open Flouri?
 
-When you launch Flourish, the following happens:
+When you launch Flouri, the following happens:
 
 1. **Banner Display**: An animated ASCII banner welcomes you
 2. **Configuration Loading**:
@@ -201,7 +201,7 @@ When you launch Flourish, the following happens:
    - Built-in plugins are registered (zsh bindings, command enhancers)
    - Completion system loads custom completion scripts
 4. **History Restoration**:
-   - Command history is loaded from `~/.config/flourish/history`
+   - Command history is loaded from `~/.config/flouri/history`
    - Previous session commands are available via arrow keys
 5. **Ready to Use**: You're presented with a prompt showing:
    - Current working directory
@@ -238,7 +238,7 @@ This opens an interactive terminal where you can:
    - `↑/↓` - Navigate command history
    - `Ctrl+R` - Reverse search through history (fzf-like)
    - `Ctrl+L` - Clear screen (preserves welcome message)
-   - `Ctrl+D` - Exit Flourish
+   - `Ctrl+D` - Exit Flouri
    - `Ctrl+C` - Cancel current operation
 
 4. **Enhanced Features**:
@@ -256,40 +256,40 @@ For non-interactive use or scripting:
 
 ```bash
 # Ask questions (AI responds with text)
-flourish agent "Explain how Docker containers work"
+flouri agent "Explain how Docker containers work"
 
 # Ask questions with command execution
-flourish agent "Show me git status and list all Python files"
+flouri agent "Show me git status and list all Python files"
 
 # With allowlist (only allow specific commands for AI execution)
-flourish agent --allowlist "ls,cd,git,find" "Show me git status and list files"
+flouri agent --allowlist "ls,cd,git,find" "Show me git status and list files"
 
 # With blacklist (prevent specific commands)
-flourish agent --blacklist "rm,dd,format" "Help me organize my project files"
+flouri agent --blacklist "rm,dd,format" "Help me organize my project files"
 
 # With live streaming (real-time output as AI generates response)
-flourish agent --stream "Explain how Docker containers work"
-flourish agent -s "List files and show git status"  # Short form
+flouri agent --stream "Explain how Docker containers work"
+flouri agent -s "List files and show git status"  # Short form
 
 # Complex workflows
-flourish agent "Analyze my project structure and suggest improvements"
-flourish agent "Find all TODO comments in the codebase and create a summary"
+flouri agent "Analyze my project structure and suggest improvements"
+flouri agent "Find all TODO comments in the codebase and create a summary"
 ```
 
 #### Example CLI Workflows
 
 ```bash
 # Development workflow
-flourish agent "Check git status, run tests, and show me any failing tests"
+flouri agent "Check git status, run tests, and show me any failing tests"
 
 # File management
-flourish agent "Find all large files (>100MB) in the current directory"
+flouri agent "Find all large files (>100MB) in the current directory"
 
 # Code analysis
-flourish agent "Review the code in src/ and suggest refactoring opportunities"
+flouri agent "Review the code in src/ and suggest refactoring opportunities"
 
 # Documentation
-flourish agent "Generate a summary of all the functions in utils.py"
+flouri agent "Generate a summary of all the functions in utils.py"
 ```
 
 ### Bash Integration
@@ -297,11 +297,11 @@ flourish agent "Generate a summary of all the functions in utils.py"
 Add to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
-# Add flourish to PATH if installed locally
-export PATH=$PATH:/path/to/flourish/.venv/bin
+# Add flouri to PATH if installed locally
+export PATH=$PATH:/path/to/flouri/.venv/bin
 
 # Create convenient alias (optional)
-alias ai='flourish'
+alias ai='flouri'
 ```
 
 Then you can use:
@@ -328,7 +328,7 @@ The `.env` file is automatically loaded when you run the application - no need t
 
 ### Supported Models
 
-Flourish uses [LiteLLM](https://litellm.ai/) for multi-provider support. You can use models from:
+Flouri uses [LiteLLM](https://litellm.ai/) for multi-provider support. You can use models from:
 
 - **OpenAI**: `gpt-4o-mini`, `gpt-4`, `gpt-3.5-turbo`, etc.
 - **Anthropic**: `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, etc.
@@ -361,11 +361,11 @@ You can manually edit this file, or use the agent's tools to manage it.
 
 ### Command History
 
-Flourish automatically saves your command history across sessions:
+Flouri automatically saves your command history across sessions:
 
-- **History Location**: `~/.config/flourish/history`
+- **History Location**: `~/.config/flouri/history`
 - **History Features**:
-  - Persistent across sessions (stored in `~/.config/flourish/history`)
+  - Persistent across sessions (stored in `~/.config/flouri/history`)
   - Navigate with `↑/↓` arrow keys
   - Reverse search with `Ctrl+R` (fzf-like interface)
   - Case-insensitive search
@@ -402,7 +402,7 @@ pytest
 ```bash
 ruff check .
 black --check .
-mypy flourish
+mypy flouri
 ```
 
 ### Formatting
@@ -415,9 +415,9 @@ ruff format .
 ## Project Structure
 
 ```
-flourish/
+flouri/
 ├── .github/              # GitHub Actions workflows
-├── flourish/              # Main application source code
+├── flouri/              # Main application source code
 │   ├── agent/            # Agent definitions and logic
 │   ├── completions/      # Command completion system
 │   │   ├── git.py        # Git command completions
@@ -453,11 +453,11 @@ flourish/
 └── LICENSE               # License file
 ```
 
-## Extending Flourish
+## Extending Flouri
 
 ### Plugin System
 
-Flourish includes a powerful plugin system that allows you to add custom commands, aliases, and behaviors. Create plugins to:
+Flouri includes a powerful plugin system that allows you to add custom commands, aliases, and behaviors. Create plugins to:
 
 - Add command aliases (e.g., `ll` -> `ls -la`)
 - Implement zsh-like features (e.g., `cd ...` to go back directories)
@@ -474,7 +474,7 @@ See [docs/plugins.md](docs/plugins.md) for detailed documentation on creating pl
 
 ### Completion System
 
-Flourish includes a flexible completion system that supports:
+Flouri includes a flexible completion system that supports:
 
 - **Built-in completions**: Common commands like `cd` and `git` have enhanced completions
 - **Custom completion scripts**: Create completion scripts for any command
@@ -482,9 +482,9 @@ Flourish includes a flexible completion system that supports:
 
 Completion scripts can be placed in:
 - Project completions: `completions/` directory in the project root
-- User completions: `~/.config/flourish/completions/`
+- User completions: `~/.config/flouri/completions/`
 
-See the completion system in `flourish/completions/` for examples.
+See the completion system in `flouri/completions/` for examples.
 
 ## Security Considerations
 
@@ -523,5 +523,5 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/made-after-dark/flourish/issues)
-- Discussions: [GitHub Discussions](https://github.com/made-after-dark/flourish/discussions)
+- Issues: [GitHub Issues](https://github.com/made-after-dark/flouri/issues)
+- Discussions: [GitHub Discussions](https://github.com/made-after-dark/flouri/discussions)

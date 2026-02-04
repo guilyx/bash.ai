@@ -1,10 +1,10 @@
 # Plugin System
 
-The Flourish plugin system allows you to extend the terminal environment with custom commands, aliases, and behaviors. This document explains how the plugin system works and how to create your own plugins.
+The Flouri plugin system allows you to extend the terminal environment with custom commands, aliases, and behaviors. This document explains how the plugin system works and how to create your own plugins.
 
 ## Overview
 
-Flourish has two types of plugins:
+Flouri has two types of plugins:
 
 1. **Command Handlers**: Plugins that completely handle command execution (e.g., zsh bindings)
 2. **Command Enhancers**: Plugins that enhance/enrich command output without replacing execution (e.g., colored ls output)
@@ -38,10 +38,10 @@ The `PluginManager` manages registered plugins and tries them in order when a co
 
 ### Step 1: Create Your Plugin Class
 
-Create a new file in `flourish/plugins/` (e.g., `my_plugin.py`):
+Create a new file in `flouri/plugins/` (e.g., `my_plugin.py`):
 
 ```python
-"""My custom plugin for Flourish."""
+"""My custom plugin for Flouri."""
 
 from pathlib import Path
 from typing import Any
@@ -85,7 +85,7 @@ class MyPlugin(Plugin):
 
 ### Step 2: Register Your Plugin
 
-Add your plugin to the plugin manager in `flourish/ui/tui.py`:
+Add your plugin to the plugin manager in `flouri/ui/tui.py`:
 
 ```python
 from ..plugins import PluginManager, ZshBindingsPlugin, MyPlugin
@@ -100,7 +100,7 @@ self.plugin_manager.register(MyPlugin())  # Add your plugin
 
 ### Step 3: Export Your Plugin
 
-Add your plugin to `flourish/plugins/__init__.py`:
+Add your plugin to `flouri/plugins/__init__.py`:
 
 ```python
 from .my_plugin import MyPlugin
@@ -142,7 +142,7 @@ class ZshBindingsPlugin(Plugin):
 
 ## Completion Plugins
 
-Flourish also supports completion plugins that integrate with the `prompt-toolkit` completion system. These provide enhanced tab completion for specific commands.
+Flouri also supports completion plugins that integrate with the `prompt-toolkit` completion system. These provide enhanced tab completion for specific commands.
 
 ### Example: CdCompleter
 
@@ -166,7 +166,7 @@ class CdCompleter(Completer):
         ...
 ```
 
-Completion plugins are registered differently from regular plugins - they're integrated directly with the `prompt-toolkit` completion system in the TUI. See `flourish/plugins/cd_completer.py` for the full implementation.
+Completion plugins are registered differently from regular plugins - they're integrated directly with the `prompt-toolkit` completion system in the TUI. See `flouri/plugins/cd_completer.py` for the full implementation.
 
 ## Plugin Return Values
 
@@ -227,8 +227,8 @@ We welcome plugin contributions! To contribute a plugin:
 - [ ] Plugin follows the `Plugin` base class interface
 - [ ] `should_handle()` is specific and efficient
 - [ ] `execute()` handles errors gracefully
-- [ ] Plugin is registered in `flourish/ui/tui.py`
-- [ ] Plugin is exported in `flourish/plugins/__init__.py`
+- [ ] Plugin is registered in `flouri/ui/tui.py`
+- [ ] Plugin is exported in `flouri/plugins/__init__.py`
 - [ ] Documentation added/updated
 - [ ] Code follows project style (black, ruff)
 - [ ] No breaking changes to existing functionality
@@ -319,10 +319,10 @@ Command enhancers allow you to enrich command output without replacing command e
 
 ### Creating a Command Enhancer
 
-Create a new file in `flourish/plugins/` (e.g., `my_enhancer.py`):
+Create a new file in `flouri/plugins/` (e.g., `my_enhancer.py`):
 
 ```python
-from flourish.plugins.enhancers import CommandEnhancer
+from flouri.plugins.enhancers import CommandEnhancer
 from typing import Any
 
 class MyEnhancer(CommandEnhancer):
@@ -351,7 +351,7 @@ class MyEnhancer(CommandEnhancer):
 
 ### Registering an Enhancer
 
-Add your enhancer to `flourish/ui/tui.py`:
+Add your enhancer to `flouri/ui/tui.py`:
 
 ```python
 from ..plugins.enhancers import MyEnhancer
@@ -362,7 +362,7 @@ self.enhancer_manager.register(MyEnhancer())
 
 ### Built-in Enhancers
 
-Flourish includes several built-in enhancers:
+Flouri includes several built-in enhancers:
 
 #### LsColorEnhancer
 
@@ -382,7 +382,7 @@ Provides helpful hints when `cd` fails:
 
 ### Built-in Completion Plugins
 
-Flourish includes built-in completion plugins:
+Flouri includes built-in completion plugins:
 
 #### CdCompleter
 
@@ -439,7 +439,7 @@ class ColorfulOutputEnhancer(CommandEnhancer):
 
 ## Plugin Types Summary
 
-Flourish supports three types of plugins:
+Flouri supports three types of plugins:
 
 1. **Command Handlers** (`Plugin`): Intercept and handle commands before standard execution
 2. **Command Enhancers** (`CommandEnhancer`): Enhance command output after execution
@@ -449,10 +449,10 @@ Each type serves a different purpose and integrates with the system at different
 
 ## Questions?
 
-- Check existing plugins in `flourish/plugins/` for examples
-- Check existing enhancers in `flourish/plugins/enhancers.py` for enhancement examples
-- Check `flourish/plugins/cd_completer.py` for completion plugin examples
-- Open a [Discussion](https://github.com/made-after-dark/flourish/discussions) for questions
+- Check existing plugins in `flouri/plugins/` for examples
+- Check existing enhancers in `flouri/plugins/enhancers.py` for enhancement examples
+- Check `flouri/plugins/cd_completer.py` for completion plugin examples
+- Open a [Discussion](https://github.com/made-after-dark/flouri/discussions) for questions
 - Review [CONTRIBUTING.md](../CONTRIBUTING.md) for general contribution guidelines
 
 Happy plugin development! 🚀

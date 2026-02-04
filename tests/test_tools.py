@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from flourish.tools import (
+from flouri.tools import (
     add_to_allowlist,
     add_to_blacklist,
     execute_bash,
@@ -43,8 +43,8 @@ def temp_config_file(tmp_path):
 @pytest.fixture
 def mock_config_manager(temp_config_file):
     """Mock ConfigManager to use temporary config file."""
-    with patch("flourish.config.config_manager.ConfigManager") as mock_class:
-        from flourish.config.config_manager import ConfigManager
+    with patch("flouri.config.config_manager.ConfigManager") as mock_class:
+        from flouri.config.config_manager import ConfigManager
 
         # Create a real ConfigManager with temp file
         def create_manager(*args, **kwargs):
@@ -57,8 +57,8 @@ def mock_config_manager(temp_config_file):
 @pytest.fixture
 def mock_bash_config_manager(temp_config_file):
     """Mock ConfigManager in bash tools to use temporary config file."""
-    with patch("flourish.config.config_manager.ConfigManager") as mock_class:
-        from flourish.config.config_manager import ConfigManager
+    with patch("flouri.config.config_manager.ConfigManager") as mock_class:
+        from flouri.config.config_manager import ConfigManager
 
         # Create a real ConfigManager with temp file
         def create_manager(*args, **kwargs):
@@ -71,8 +71,8 @@ def mock_bash_config_manager(temp_config_file):
 @pytest.fixture
 def reset_globals():
     """Reset global variables before each test."""
-    import flourish.tools.globals as globals_module
-    from flourish.tools.globals import (
+    import flouri.tools.globals as globals_module
+    from flouri.tools.globals import (
         GLOBAL_ALLOWLIST,
         GLOBAL_BLACKLIST,
         GLOBAL_CWD,
@@ -100,7 +100,7 @@ def test_set_cwd(tmp_path, reset_globals):
     """Test setting current working directory."""
     result = set_cwd(str(tmp_path))
     assert "Working directory set to" in result
-    import flourish.tools.globals as globals_module
+    import flouri.tools.globals as globals_module
 
     assert globals_module.GLOBAL_CWD == str(tmp_path)
 
@@ -122,7 +122,7 @@ def test_get_user(reset_globals):
 def test_set_allowlist_blacklist(reset_globals):
     """Test setting allowlist and blacklist."""
     set_allowlist_blacklist(allowlist=["ls", "cd"], blacklist=["rm"])
-    import flourish.tools.globals as globals_module
+    import flouri.tools.globals as globals_module
 
     assert "ls" in globals_module.GLOBAL_ALLOWLIST
     assert "rm" in globals_module.GLOBAL_BLACKLIST
@@ -157,7 +157,7 @@ def test_add_to_allowlist(reset_globals, mock_config_manager):
     set_allowlist_blacklist(allowlist=[], blacklist=None)
     result = add_to_allowlist("ls", tool_context=None)
     assert result["status"] == "success"
-    import flourish.tools.globals as globals_module
+    import flouri.tools.globals as globals_module
 
     assert "ls" in globals_module.GLOBAL_ALLOWLIST
 
@@ -167,7 +167,7 @@ def test_add_to_blacklist(reset_globals, mock_config_manager):
     set_allowlist_blacklist(allowlist=None, blacklist=[])
     result = add_to_blacklist("rm", tool_context=None)
     assert result["status"] == "success"
-    import flourish.tools.globals as globals_module
+    import flouri.tools.globals as globals_module
 
     assert "rm" in globals_module.GLOBAL_BLACKLIST
 
@@ -177,7 +177,7 @@ def test_remove_from_allowlist(reset_globals, mock_config_manager):
     set_allowlist_blacklist(allowlist=["ls"], blacklist=None)
     result = remove_from_allowlist("ls", tool_context=None)
     assert result["status"] == "success"
-    import flourish.tools.globals as globals_module
+    import flouri.tools.globals as globals_module
 
     assert "ls" not in globals_module.GLOBAL_ALLOWLIST
 
@@ -187,7 +187,7 @@ def test_remove_from_blacklist(reset_globals, mock_config_manager):
     set_allowlist_blacklist(allowlist=None, blacklist=["rm"])
     result = remove_from_blacklist("rm", tool_context=None)
     assert result["status"] == "success"
-    import flourish.tools.globals as globals_module
+    import flouri.tools.globals as globals_module
 
     assert "rm" not in globals_module.GLOBAL_BLACKLIST
 
@@ -253,7 +253,7 @@ def test_is_in_blacklist(reset_globals):
 def test_read_bash_history_nonexistent(tmp_path, monkeypatch):
     """Test reading bash history when file doesn't exist."""
     # Create the config directory structure but no history file
-    history_file = tmp_path / ".config" / "flourish" / "history"
+    history_file = tmp_path / ".config" / "flouri" / "history"
     history_file.parent.mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
@@ -267,7 +267,7 @@ def test_read_bash_history_nonexistent(tmp_path, monkeypatch):
 
 def test_read_bash_history_empty_file(tmp_path, monkeypatch):
     """Test reading bash history from empty file."""
-    history_file = tmp_path / ".config" / "flourish" / "history"
+    history_file = tmp_path / ".config" / "flouri" / "history"
     history_file.parent.mkdir(parents=True, exist_ok=True)
     history_file.touch()
 
@@ -281,7 +281,7 @@ def test_read_bash_history_empty_file(tmp_path, monkeypatch):
 
 def test_read_bash_history_with_commands(tmp_path, monkeypatch):
     """Test reading bash history with commands."""
-    history_file = tmp_path / ".config" / "flourish" / "history"
+    history_file = tmp_path / ".config" / "flouri" / "history"
     history_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Write some history entries (one per line, as prompt-toolkit format)
@@ -301,7 +301,7 @@ def test_read_bash_history_with_commands(tmp_path, monkeypatch):
 
 def test_read_bash_history_with_limit(tmp_path, monkeypatch):
     """Test reading bash history with limit."""
-    history_file = tmp_path / ".config" / "flourish" / "history"
+    history_file = tmp_path / ".config" / "flouri" / "history"
     history_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Write 10 history entries
@@ -318,7 +318,7 @@ def test_read_bash_history_with_limit(tmp_path, monkeypatch):
 
 def test_read_bash_history_removes_duplicates(tmp_path, monkeypatch):
     """Test that read_bash_history removes duplicate commands."""
-    history_file = tmp_path / ".config" / "flourish" / "history"
+    history_file = tmp_path / ".config" / "flouri" / "history"
     history_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Write duplicate commands
@@ -339,7 +339,7 @@ def test_read_bash_history_removes_duplicates(tmp_path, monkeypatch):
 
 def test_read_bash_history_limit_validation(tmp_path, monkeypatch):
     """Test that read_bash_history validates limit parameter."""
-    history_file = tmp_path / ".config" / "flourish" / "history"
+    history_file = tmp_path / ".config" / "flouri" / "history"
     history_file.parent.mkdir(parents=True, exist_ok=True)
     history_file.write_text("command1\ncommand2\n")
 
@@ -358,7 +358,7 @@ def test_read_bash_history_limit_validation(tmp_path, monkeypatch):
 
 def test_read_bash_history_permission_error(tmp_path, monkeypatch):
     """Test read_bash_history handles permission errors gracefully."""
-    history_file = tmp_path / ".config" / "flourish" / "history"
+    history_file = tmp_path / ".config" / "flouri" / "history"
     history_file.parent.mkdir(parents=True, exist_ok=True)
     history_file.write_text("test\n")
     history_file.chmod(0o000)  # Remove all permissions
@@ -377,7 +377,7 @@ def test_read_bash_history_permission_error(tmp_path, monkeypatch):
 
 def test_read_conversation_history_nonexistent(tmp_path, monkeypatch):
     """Test reading conversation history when logs don't exist."""
-    logs_dir = tmp_path / ".config" / "flourish" / "logs"
+    logs_dir = tmp_path / ".config" / "flouri" / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
@@ -390,7 +390,7 @@ def test_read_conversation_history_nonexistent(tmp_path, monkeypatch):
 
 def test_read_conversation_history_empty_logs_dir(tmp_path, monkeypatch):
     """Test reading conversation history from empty logs directory."""
-    logs_dir = tmp_path / ".config" / "flourish" / "logs"
+    logs_dir = tmp_path / ".config" / "flouri" / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
@@ -402,16 +402,16 @@ def test_read_conversation_history_empty_logs_dir(tmp_path, monkeypatch):
 
 def test_read_conversation_history_with_entries(tmp_path, monkeypatch):
     """Test reading conversation history with log entries."""
-    logs_dir = tmp_path / ".config" / "flourish" / "logs"
+    logs_dir = tmp_path / ".config" / "flouri" / "logs"
     session_dir = logs_dir / "session_2025-01-26_10-00-00"
     session_dir.mkdir(parents=True, exist_ok=True)
 
     conversation_log = session_dir / "conversation.log"
     # Write log entries in the format: "timestamp - name - level - JSON_MESSAGE"
     log_entries = [
-        '2025-01-26 10:00:00 - flourish.conversation - INFO - {"timestamp":"2025-01-26T10:00:00","event":"conversation","role":"user","content":"Hello"}\n',
-        '2025-01-26 10:00:01 - flourish.conversation - INFO - {"timestamp":"2025-01-26T10:00:01","event":"conversation","role":"agent","content":"Hi there!"}\n',
-        '2025-01-26 10:00:02 - flourish.conversation - INFO - {"timestamp":"2025-01-26T10:00:02","event":"tool_call","tool":"execute_bash","parameters":{"cmd":"ls"},"success":true}\n',
+        '2025-01-26 10:00:00 - flouri.conversation - INFO - {"timestamp":"2025-01-26T10:00:00","event":"conversation","role":"user","content":"Hello"}\n',
+        '2025-01-26 10:00:01 - flouri.conversation - INFO - {"timestamp":"2025-01-26T10:00:01","event":"conversation","role":"agent","content":"Hi there!"}\n',
+        '2025-01-26 10:00:02 - flouri.conversation - INFO - {"timestamp":"2025-01-26T10:00:02","event":"tool_call","tool":"execute_bash","parameters":{"cmd":"ls"},"success":true}\n',
     ]
     conversation_log.write_text("".join(log_entries))
 
@@ -431,7 +431,7 @@ def test_read_conversation_history_with_entries(tmp_path, monkeypatch):
 
 def test_read_conversation_history_with_limit(tmp_path, monkeypatch):
     """Test reading conversation history with limit."""
-    logs_dir = tmp_path / ".config" / "flourish" / "logs"
+    logs_dir = tmp_path / ".config" / "flouri" / "logs"
     session_dir = logs_dir / "session_2025-01-26_10-00-00"
     session_dir.mkdir(parents=True, exist_ok=True)
 
@@ -440,7 +440,7 @@ def test_read_conversation_history_with_limit(tmp_path, monkeypatch):
     log_entries = []
     for i in range(10):
         log_entries.append(
-            f'2025-01-26 10:00:{i:02d} - flourish.conversation - INFO - {{"timestamp":"2025-01-26T10:00:{i:02d}","event":"conversation","role":"user","content":"Message {i}"}}\n'
+            f'2025-01-26 10:00:{i:02d} - flouri.conversation - INFO - {{"timestamp":"2025-01-26T10:00:{i:02d}","event":"conversation","role":"user","content":"Message {i}"}}\n'
         )
     conversation_log.write_text("".join(log_entries))
 
@@ -454,13 +454,13 @@ def test_read_conversation_history_with_limit(tmp_path, monkeypatch):
 
 def test_read_conversation_history_finds_most_recent(tmp_path, monkeypatch):
     """Test that read_conversation_history finds the most recent session."""
-    logs_dir = tmp_path / ".config" / "flourish" / "logs"
+    logs_dir = tmp_path / ".config" / "flouri" / "logs"
     # Create two session directories
     old_session = logs_dir / "session_2025-01-26_09-00-00"
     old_session.mkdir(parents=True, exist_ok=True)
     old_log = old_session / "conversation.log"
     old_log.write_text(
-        '2025-01-26 09:00:00 - flourish.conversation - INFO - {"event":"conversation","role":"user","content":"Old message"}\n'
+        '2025-01-26 09:00:00 - flouri.conversation - INFO - {"event":"conversation","role":"user","content":"Old message"}\n'
     )
     # Ensure old session has older mtime
     old_time = time.time() - 100
@@ -472,7 +472,7 @@ def test_read_conversation_history_finds_most_recent(tmp_path, monkeypatch):
     new_session.mkdir(parents=True, exist_ok=True)
     new_log = new_session / "conversation.log"
     new_log.write_text(
-        '2025-01-26 10:00:00 - flourish.conversation - INFO - {"event":"conversation","role":"user","content":"New message"}\n'
+        '2025-01-26 10:00:00 - flouri.conversation - INFO - {"event":"conversation","role":"user","content":"New message"}\n'
     )
     # Ensure new session has newer mtime
     new_time = time.time()

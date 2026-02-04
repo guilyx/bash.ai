@@ -1,6 +1,6 @@
-# Third-Party Libraries Used in Flourish
+# Third-Party Libraries Used in Flouri
 
-This document outlines the key third-party libraries used in the Flourish project, their purpose, and licensing information.
+This document outlines the key third-party libraries used in the Flouri project, their purpose, and licensing information.
 
 ## Core Dependencies
 
@@ -34,13 +34,13 @@ This document outlines the key third-party libraries used in the Flourish projec
 
 **Purpose**: Google AI Development Kit provides the agent framework for orchestrating AI interactions, tool calling, session management, and streaming responses.
 
-**Why it's used**: Google ADK provides a robust foundation for building agentic applications with support for tools, planning, and multi-turn conversations. It handles the complex orchestration between the LLM and the tools that Flourish provides.
+**Why it's used**: Google ADK provides a robust foundation for building agentic applications with support for tools, planning, and multi-turn conversations. It handles the complex orchestration between the LLM and the tools that Flouri provides.
 
 **Documentation**: https://github.com/google/generative-ai-python
 
 ### LiteLLM
 
-**Purpose**: LiteLLM provides a unified interface to interact with multiple LLM providers, including OpenAI, Anthropic, Google, and many others. This allows Flourish to support various models without provider-specific code.
+**Purpose**: LiteLLM provides a unified interface to interact with multiple LLM providers, including OpenAI, Anthropic, Google, and many others. This allows Flouri to support various models without provider-specific code.
 
 **Why it's used**: Instead of being locked into a single provider, LiteLLM enables users to choose their preferred LLM provider by simply changing the `MODEL` environment variable. Google ADK uses LiteLLM as its model backend.
 
@@ -50,7 +50,7 @@ This document outlines the key third-party libraries used in the Flourish projec
 
 **Purpose**: Prompt-toolkit provides a powerful, cross-platform library for building interactive command-line applications with advanced features like auto-completion, syntax highlighting, and key bindings.
 
-**Why it's used**: It provides the foundation for Flourish's TUI, enabling rich terminal interactions including command completion, history navigation, and syntax highlighting. It's more flexible than Textual for this use case as it provides lower-level control over terminal interactions.
+**Why it's used**: It provides the foundation for Flouri's TUI, enabling rich terminal interactions including command completion, history navigation, and syntax highlighting. It's more flexible than Textual for this use case as it provides lower-level control over terminal interactions.
 
 **Documentation**: https://python-prompt-toolkit.readthedocs.io/
 
@@ -74,7 +74,7 @@ This document outlines the key third-party libraries used in the Flourish projec
 
 **Purpose**: Click is a Python package for creating command-line interfaces.
 
-**Why it's used**: It provides a clean, declarative way to define CLI commands and options (like `flourish agent`), making the codebase more maintainable.
+**Why it's used**: It provides a clean, declarative way to define CLI commands and options (like `flouri agent`), making the codebase more maintainable.
 
 **Documentation**: https://click.palletsprojects.com/
 
@@ -88,7 +88,7 @@ This document outlines the key third-party libraries used in the Flourish projec
 
 ## License Compatibility
 
-All dependencies use permissive licenses (MIT, BSD, Apache-2.0) that are compatible with the Apache License 2.0 used by Flourish.
+All dependencies use permissive licenses (MIT, BSD, Apache-2.0) that are compatible with the Apache License 2.0 used by Flouri.
 
 ## Updating Dependencies
 

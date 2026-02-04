@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from flourish.config.config_manager import ConfigManager
+from flouri.config.config_manager import ConfigManager
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ def test_load_config_missing_file_uses_default(tmp_path):
 def test_default_config_when_get_settings_raises(tmp_path):
     """_default_config returns minimal defaults when get_settings raises."""
     config_file = tmp_path / "no_config.json"
-    with patch("flourish.config.config_manager.get_settings", side_effect=ValueError("no API key")):
+    with patch("flouri.config.config_manager.get_settings", side_effect=ValueError("no API key")):
         cm = ConfigManager(config_file=str(config_file))
     assert "skills" in cm.get_config()
     assert "bash" in cm.get_enabled_skills()

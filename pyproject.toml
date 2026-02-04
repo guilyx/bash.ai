@@ -1,5 +1,5 @@
 [project]
-name = "flourish"
+name = "flouri"
 version = "0.1.0"
 description = "AI-powered bash environment enhancement tool."
 readme = "README.md"
@@ -28,14 +28,14 @@ dev = [
 ]
 
 [project.scripts]
-flourish = "flourish.ui.cli:main"
+flouri = "flouri.ui.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["flourish"]
+packages = ["flouri"]
 
 [tool.ruff]
 line-length = 100
@@ -82,15 +82,15 @@ python_functions = ["test_*"]
 asyncio_mode = "auto"
 
 [tool.coverage.run]
-source = ["flourish"]
+source = ["flouri"]
 omit = [
     "*/tests/*",
     "*/test_*.py",
     # Hard-to-unit-test: interactive TUI, runner loop, prompt-toolkit–coupled completer, ROS2 completions
-    "flourish/ui/tui.py",
-    "flourish/runner/runner.py",
-    "flourish/plugins/cd_completer.py",
-    "flourish/completions/ros2.py",
+    "flouri/ui/tui.py",
+    "flouri/runner/runner.py",
+    "flouri/plugins/cd_completer.py",
+    "flouri/completions/ros2.py",
 ]
 
 [tool.coverage.report]

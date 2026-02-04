@@ -1,6 +1,6 @@
 """Additional tests for enhancers."""
 
-from flourish.plugins.enhancers import LsColorEnhancer
+from flouri.plugins.enhancers import LsColorEnhancer
 
 
 def test_ls_color_enhancer_long_format(tmp_path):

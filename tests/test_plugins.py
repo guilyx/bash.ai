@@ -2,8 +2,8 @@
 
 import pytest
 
-from flourish.plugins import Plugin, PluginManager, ZshBindingsPlugin
-from flourish.plugins.enhancers import (
+from flouri.plugins import Plugin, PluginManager, ZshBindingsPlugin
+from flouri.plugins.enhancers import (
     CdEnhancementPlugin,
     EnhancerManager,
     LsColorEnhancer,

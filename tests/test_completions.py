@@ -2,8 +2,8 @@
 
 from prompt_toolkit.completion import Completion
 
-from flourish.completions.loader import CompletionLoader
-from flourish.completions.registry import CompletionRegistry
+from flouri.completions.loader import CompletionLoader
+from flouri.completions.registry import CompletionRegistry
 
 
 def test_completion_registry_register():
@@ -127,7 +127,7 @@ def test_completion_loader_load_default_completions():
 
 def test_git_completion():
     """Test git completion function."""
-    from flourish.completions.git import complete_git
+    from flouri.completions.git import complete_git
 
     # Test basic git command completion
     completions = complete_git("", ["git"], 0)

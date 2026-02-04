@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from flourish.config.config_manager import ConfigManager
+from flouri.config.config_manager import ConfigManager
 
 
 @pytest.fixture

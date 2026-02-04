@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from flourish.agent import agents
+from flouri.agent import agents
 
 
 def test_build_agent_instruction():
@@ -24,8 +24,8 @@ def test_get_agent_returns_llm_agent():
     mock_settings.default_allowlist = ["ls", "pwd"]
     mock_settings.default_blacklist = ["rm"]
 
-    with patch("flourish.agent.agents.get_settings", return_value=mock_settings):
-        with patch("flourish.agent.agents.get_bash_tools") as mock_bash_tools:
+    with patch("flouri.agent.agents.get_settings", return_value=mock_settings):
+        with patch("flouri.agent.agents.get_bash_tools") as mock_bash_tools:
             mock_bash_tools.return_value = []
             agent = agents.get_agent()
 
@@ -47,8 +47,8 @@ def test_get_agent_uses_provided_allowlist_blacklist():
     mock_settings.default_allowlist = []
     mock_settings.default_blacklist = []
 
-    with patch("flourish.agent.agents.get_settings", return_value=mock_settings):
-        with patch("flourish.agent.agents.get_bash_tools") as mock_bash_tools:
+    with patch("flouri.agent.agents.get_settings", return_value=mock_settings):
+        with patch("flouri.agent.agents.get_bash_tools") as mock_bash_tools:
             mock_bash_tools.return_value = []
             agents.get_agent(
                 allowed_commands=["ls", "git"],
@@ -69,10 +69,10 @@ def test_get_agent_sets_anthropic_key_when_model_anthropic():
     mock_settings.default_allowlist = []
     mock_settings.default_blacklist = []
 
-    with patch("flourish.agent.agents.get_settings", return_value=mock_settings):
-        with patch("flourish.agent.agents.get_bash_tools", return_value=[]):
+    with patch("flouri.agent.agents.get_settings", return_value=mock_settings):
+        with patch("flouri.agent.agents.get_bash_tools", return_value=[]):
             mock_environ = MagicMock()
-            with patch("flourish.agent.agents.os.environ", mock_environ):
+            with patch("flouri.agent.agents.os.environ", mock_environ):
                 agents.get_agent()
     mock_environ.setdefault.assert_any_call("ANTHROPIC_API_KEY", "anthropic-key")
 
@@ -85,9 +85,9 @@ def test_get_agent_sets_google_key_when_model_gemini():
     mock_settings.default_allowlist = []
     mock_settings.default_blacklist = []
 
-    with patch("flourish.agent.agents.get_settings", return_value=mock_settings):
-        with patch("flourish.agent.agents.get_bash_tools", return_value=[]):
+    with patch("flouri.agent.agents.get_settings", return_value=mock_settings):
+        with patch("flouri.agent.agents.get_bash_tools", return_value=[]):
             mock_environ = MagicMock()
-            with patch("flourish.agent.agents.os.environ", mock_environ):
+            with patch("flouri.agent.agents.os.environ", mock_environ):
                 agents.get_agent()
     mock_environ.setdefault.assert_any_call("GOOGLE_API_KEY", "google-key")

@@ -4,13 +4,13 @@ from unittest.mock import patch
 
 import pytest
 
-from flourish.tools.tool_manager import tool_manager_tools
+from flouri.tools.tool_manager import tool_manager_tools
 
 
 @pytest.fixture(autouse=True)
 def mock_log_tool_call():
     """Avoid creating real session log files when tools call log_tool_call."""
-    with patch("flourish.tools.tool_manager.tool_manager_tools.log_tool_call"):
+    with patch("flouri.tools.tool_manager.tool_manager_tools.log_tool_call"):
         yield
 
 
@@ -37,7 +37,7 @@ def test_list_enabled_tools_error():
 
 def test_get_available_tools_success():
     """get_available_tools returns registry tool info when registry works."""
-    with patch("flourish.tools.registry.get_registry") as mock_reg:
+    with patch("flouri.tools.registry.get_registry") as mock_reg:
         mock_reg.return_value.get_all_tools_info.return_value = {
             "execute_bash": {"description": "Run bash command"},
             "get_user": {"description": "Get current user"},
@@ -52,7 +52,7 @@ def test_get_available_tools_success():
 
 def test_get_available_tools_error():
     """get_available_tools returns error when registry raises."""
-    with patch("flourish.tools.registry.get_registry") as mock_reg:
+    with patch("flouri.tools.registry.get_registry") as mock_reg:
         mock_reg.side_effect = ImportError("no registry")
         result = tool_manager_tools.get_available_tools()
 
@@ -63,7 +63,7 @@ def test_get_available_tools_error():
 
 def test_enable_tool_unknown_tool():
     """enable_tool returns error for unknown tool name."""
-    with patch("flourish.tools.registry.get_registry") as mock_reg:
+    with patch("flouri.tools.registry.get_registry") as mock_reg:
         mock_reg.return_value.get_skill_for_tool.return_value = None
         result = tool_manager_tools.enable_tool("nonexistent_tool")
 
@@ -73,8 +73,8 @@ def test_enable_tool_unknown_tool():
 
 def test_enable_tool_success():
     """enable_tool adds skill and returns updated list."""
-    with patch("flourish.tools.registry.get_registry") as mock_reg:
-        with patch("flourish.tools.tool_manager.tool_manager_tools.ConfigManager") as mock_cm:
+    with patch("flouri.tools.registry.get_registry") as mock_reg:
+        with patch("flouri.tools.tool_manager.tool_manager_tools.ConfigManager") as mock_cm:
             with patch.object(tool_manager_tools, "_get_enabled_tool_names") as mock_get:
                 mock_reg.return_value.get_skill_for_tool.return_value = "ros2"
                 mock_get.return_value = ["execute_bash", "ros2_topic_list"]
@@ -87,7 +87,7 @@ def test_enable_tool_success():
 
 def test_disable_tool_unknown_tool():
     """disable_tool returns error for unknown tool name."""
-    with patch("flourish.tools.registry.get_registry") as mock_reg:
+    with patch("flouri.tools.registry.get_registry") as mock_reg:
         mock_reg.return_value.get_skill_for_tool.return_value = None
         result = tool_manager_tools.disable_tool("nonexistent_tool")
 
@@ -96,8 +96,8 @@ def test_disable_tool_unknown_tool():
 
 def test_disable_tool_success():
     """disable_tool removes skill and returns updated list."""
-    with patch("flourish.tools.registry.get_registry") as mock_reg:
-        with patch("flourish.tools.tool_manager.tool_manager_tools.ConfigManager") as mock_cm:
+    with patch("flouri.tools.registry.get_registry") as mock_reg:
+        with patch("flouri.tools.tool_manager.tool_manager_tools.ConfigManager") as mock_cm:
             with patch.object(tool_manager_tools, "_get_enabled_tool_names") as mock_get:
                 mock_reg.return_value.get_skill_for_tool.return_value = "ros2"
                 mock_get.return_value = ["execute_bash"]
@@ -109,8 +109,8 @@ def test_disable_tool_success():
 
 def test_enable_tool_invokes_get_enabled_tool_names():
     """enable_tool calls _get_enabled_tool_names (covers its body)."""
-    with patch("flourish.tools.registry.get_registry") as mock_get_reg:
-        with patch("flourish.tools.tool_manager.tool_manager_tools.ConfigManager") as mock_cm:
+    with patch("flouri.tools.registry.get_registry") as mock_get_reg:
+        with patch("flouri.tools.tool_manager.tool_manager_tools.ConfigManager") as mock_cm:
             mock_reg = mock_get_reg.return_value
             mock_reg.get_skill_for_tool.return_value = "ros2"
             mock_reg.get_tool_names_for_skills.return_value = ["execute_bash", "ros2_topic_list"]
@@ -122,8 +122,8 @@ def test_enable_tool_invokes_get_enabled_tool_names():
 
 def test_enable_tool_exception_path():
     """enable_tool returns error and logs when add_skill raises."""
-    with patch("flourish.tools.registry.get_registry") as mock_reg:
-        with patch("flourish.tools.tool_manager.tool_manager_tools.ConfigManager") as mock_cm:
+    with patch("flouri.tools.registry.get_registry") as mock_reg:
+        with patch("flouri.tools.tool_manager.tool_manager_tools.ConfigManager") as mock_cm:
             with patch.object(tool_manager_tools, "_get_enabled_tool_names") as mock_get:
                 mock_reg.return_value.get_skill_for_tool.return_value = "ros2"
                 mock_cm.return_value.add_skill.side_effect = OSError("write failed")
@@ -136,8 +136,8 @@ def test_enable_tool_exception_path():
 
 def test_disable_tool_exception_path():
     """disable_tool returns error and logs when remove_skill raises."""
-    with patch("flourish.tools.registry.get_registry") as mock_reg:
-        with patch("flourish.tools.tool_manager.tool_manager_tools.ConfigManager") as mock_cm:
+    with patch("flouri.tools.registry.get_registry") as mock_reg:
+        with patch("flouri.tools.tool_manager.tool_manager_tools.ConfigManager") as mock_cm:
             with patch.object(tool_manager_tools, "_get_enabled_tool_names"):
                 mock_reg.return_value.get_skill_for_tool.return_value = "ros2"
                 mock_cm.return_value.remove_skill.side_effect = PermissionError("read-only config")
