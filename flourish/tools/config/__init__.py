@@ -1,4 +1,4 @@
-"""Configuration and allowlist/blacklist management tools."""
+"""Configuration management skill."""
 
 from .config_tools import (
     add_to_allowlist,
@@ -11,8 +11,10 @@ from .config_tools import (
     remove_from_blacklist,
     set_allowlist_blacklist,
 )
+from .skill import ConfigSkill
 
 __all__ = [
+    "ConfigSkill",
     "set_allowlist_blacklist",
     "add_to_allowlist",
     "remove_from_allowlist",
