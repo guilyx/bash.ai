@@ -324,10 +324,12 @@ class TerminalApp:
         self.completion_loader = CompletionLoader(self.completion_registry)
         # Load default completions
         self.completion_loader.load_default_completions()
-        # Register built-in git completion
+        # Register built-in completions
         from ..completions.git import complete_git
+        from ..completions.ros2 import complete_ros2
 
         self.completion_registry.register("git", complete_git, "Git command completion")
+        self.completion_registry.register("ros2", complete_ros2, "ROS2 command completion")
 
         # Setup prompt_toolkit
         # Pass a function to get current directory dynamically
