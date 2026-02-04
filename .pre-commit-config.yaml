@@ -1,6 +1,12 @@
 # See https://pre-commit.com for more information
 # Run `pre-commit install` to install hooks, then `pre-commit run --all-files` to check
 repos:
+  # Conventional commits: feat:, fix:, chore:, docs:, style:, refactor:, test:, etc.
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.27.0
+    stages: [commit-msg]
+    hooks:
+      - id: commitizen
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
