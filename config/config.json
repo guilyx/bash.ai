@@ -31,7 +31,8 @@
     "telnet",
     "git",
     "rm",
-    "ls"
+    "ls",
+    "find"
   ],
   "blacklist": [
     "dd",
